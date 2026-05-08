@@ -11,7 +11,7 @@ include(cmake/dependencies.cmake)
 add_subdirectory(src)
 
 if(SLABB_BUILD_APP)
-	add_subdirectory(app)
+	add_subdirectory(sandbox)
 endif()
 
 

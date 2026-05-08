@@ -1,9 +1,18 @@
 #pragma once
+#include <memory>
 
-public class Application {
-public:
-	Application();
-	void run();
-private:
+#include "graphics/wrapper/window/window.hpp";
 
-};
+using slabb::graphics::wrapper::window::Window;
+
+namespace slabb::core
+{
+	class Application {
+	public:
+		Application();
+		~Application();
+		void run();
+	private:
+		std::unique_ptr<Window> m_window;
+	};
+}
