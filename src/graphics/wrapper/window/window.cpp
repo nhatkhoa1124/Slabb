@@ -1,5 +1,6 @@
 #include "graphics/wrapper/window/window.hpp"
 
+#include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 #include <cassert>
 #include <stdexcept>

@@ -1,0 +1,7 @@
+[application.window]
+title = "Slabb"
+width = 1280
+height = 900
+mode = "windowed"
+resizable = false # Disable window resizing
+visible = true # Window visible on startup

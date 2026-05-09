@@ -10,20 +10,22 @@ set(SLABB_SOURCE_FILES
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-CXX_EXTENSIONS OFF
-CXX_STANDARD 20
-CXX_STANDARD_REQUIRED ON)
-
-target_include_directories(${PROJECT_NAME} PUBLIC
-${PROJECT_SOURCE_DIR}/include
+	CXX_EXTENSIONS OFF
+	CXX_STANDARD 20
+	CXX_STANDARD_REQUIRED ON
 )
 
-FetchContent_MakeAvailable(d3d12ma)
-FetchContent_MakeAvailable(glfw)
-FetchContent_MakeAvailable(spdlog)
+target_include_directories(${PROJECT_NAME} PUBLIC
+	${PROJECT_SOURCE_DIR}/include
+	${CMAKE_CURRENT_BINARY_DIR}/include/
+)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-d3d12ma
-glfw
-spdlog
+	d3d12
+	dxgi
+	d3dcompiler
+	D3D12MemoryAllocator
+	glfw
+	spdlog::spdlog
+	tomlplusplus::tomlplusplus
 )

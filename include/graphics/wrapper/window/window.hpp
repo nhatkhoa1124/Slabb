@@ -1,12 +1,13 @@
 #pragma once
 #include <string>
-#include <GLFW/glfw3.h>
+
+struct GLFWwindow;
 
 enum class WindowMode{FULLSCREEN, WINDOWED, BORDERLESS_FULLSCREEN};
 
 namespace slabb::graphics::wrapper::window
 {
-	class Window
+	class __declspec(dllexport) Window
 	{
 	public:
 		Window();
