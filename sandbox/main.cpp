@@ -6,9 +6,17 @@ using slabb::core::Application;
 
 int main()
 {
-	Application app = {};
-	app.init_subsystems();
+	try
+	{
+		auto app = std::make_unique<Application>();
+		app->init_subsystems();
+		app->run();
+	}
+	catch (const std::exception& exception)
+	{
+		std::cerr << "CRITICAL ERROR: In main: " << exception.what() << std::endl;
+		return -1;
+	}
 
-	std::cout << "Main running\n";
 	return 0;
 }

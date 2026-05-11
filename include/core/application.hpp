@@ -1,10 +1,13 @@
 #pragma once
+#include "common/common.hpp"
 #include <memory>
 #include <string>
 
 #include "graphics/wrapper/window/window.hpp"
+#include "graphics/renderer.hpp"
 
 using slabb::graphics::wrapper::window::Window;
+using slabb::graphics::Renderer;
 
 namespace slabb::core
 {
@@ -18,7 +21,7 @@ namespace slabb::core
 		bool visible;
 	};
 
-	class __declspec(dllexport) Application {
+	class SLABB_EXPORT Application {
 	public:
 		Application();
 		~Application();
@@ -29,5 +32,6 @@ namespace slabb::core
 		AppConfig m_config{};
 
 		std::unique_ptr<Window> m_window;
+		std::unique_ptr<Renderer> m_renderer;
 	};
 }

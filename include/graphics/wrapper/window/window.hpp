@@ -1,4 +1,5 @@
 #pragma once
+#include "common/common.hpp"
 #include <string>
 
 struct GLFWwindow;
@@ -7,7 +8,7 @@ enum class WindowMode{FULLSCREEN, WINDOWED, BORDERLESS_FULLSCREEN};
 
 namespace slabb::graphics::wrapper::window
 {
-	class __declspec(dllexport) Window
+	class SLABB_EXPORT Window
 	{
 	public:
 		Window();

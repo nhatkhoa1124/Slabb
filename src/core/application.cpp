@@ -19,9 +19,10 @@ namespace slabb::core
 	bool Application::init_subsystems()
 	{
 		spdlog::trace("Initializing application's subsystems");
-
+		// Start application systems
 		load_toml_file("assets/config/application_cfg.toml");
 
+		// Init depending subsystems
 		m_window->init(m_config.title, m_config.mode, m_config.width, 
 					   m_config.height, m_config.resizable, m_config.visible);
 
@@ -32,6 +33,8 @@ namespace slabb::core
 	{
 		while (!m_window->should_close())
 		{
+			m_window->poll();
+
 
 		}
 	}

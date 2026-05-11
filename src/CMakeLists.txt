@@ -1,11 +1,11 @@
 set(SLABB_SOURCE_FILES
 	graphics/render_graph.cpp
 	graphics/renderer.cpp
-	graphics/device.cpp
-	graphics/instance.cpp 
+	graphics/wrapper/device.cpp
+	graphics/wrapper/instance.cpp
 	core/application.cpp 
 	graphics/wrapper/window/window.cpp
-)
+	"graphics/tools/debugger.cpp")
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
 
