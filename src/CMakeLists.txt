@@ -5,7 +5,8 @@ set(SLABB_SOURCE_FILES
 	graphics/wrapper/instance.cpp
 	core/application.cpp 
 	graphics/wrapper/window/window.cpp
-	"graphics/tools/debugger.cpp")
+	graphics/tools/validation.cpp 
+)
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
 
