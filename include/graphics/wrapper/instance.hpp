@@ -22,10 +22,10 @@ namespace slabb::graphics::wrapper
 		/**
 		* @brief Get the best adapter on current machine
 		*/
-		void enumerate_adapters();
+		void enumerate_adapter();
 
-		inline IDXGIFactory4* factory() const { return m_factory.Get(); }
-		inline IDXGIAdapter4* adapter() const { return m_adapter.Get(); }
+		[[nodiscard]] inline IDXGIFactory4* factory() const { return m_factory.Get(); }
+		[[nodiscard]] inline IDXGIAdapter4* adapter() const { return m_adapter.Get(); }
 
 	private:
 		ComPtr<IDXGIFactory4> m_factory;

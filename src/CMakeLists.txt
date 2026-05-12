@@ -6,6 +6,7 @@ set(SLABB_SOURCE_FILES
 	core/application.cpp 
 	graphics/wrapper/window/window.cpp
 	graphics/tools/validation.cpp 
+	graphics/wrapper/command/command_queue.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})

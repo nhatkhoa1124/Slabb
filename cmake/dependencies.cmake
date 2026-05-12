@@ -1,4 +1,5 @@
 include(FetchContent)
+set(FETCHCONTENT_QUIET OFF)
 
 FetchContent_Declare(d3d12ma SYSTEM
 	GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator
@@ -26,4 +27,11 @@ FetchContent_Declare(tomlplusplus
 	GIT_TAG v3.4.0
 	GIT_SHALLOW ON 
 	GIT_PROGRESS ON
+)
+
+FetchContent_Declare(gtest
+	GIT_REPOSITORY https://github.com/google/googletest
+	GIT_TAG v1.17.0
+	GIT_SHALLOW ON
+	GIT_PROGRESS ON 
 )

@@ -17,6 +17,7 @@ FetchContent_MakeAvailable(
 	glfw 
 	spdlog
 	tomlplusplus
+	gtest
 )
 
 add_subdirectory(src)

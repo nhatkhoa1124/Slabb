@@ -2,8 +2,10 @@
 
 #include "graphics/tools/validation.hpp"
 #include "graphics/tools/debug.hpp"
+#include "graphics/tools/string_utils.hpp"
 
 using slabb::graphics::tools::Validation;
+using slabb::graphics::tools::StringUtils;
 
 namespace slabb::graphics::wrapper
 {
@@ -15,28 +17,32 @@ namespace slabb::graphics::wrapper
 		validation.enable_debug_layer();
 		debug_flag |= DXGI_CREATE_FACTORY_DEBUG;
 #endif
+		spdlog::trace("Creating factory instance");
 		SLABB_CHECK(CreateDXGIFactory2(debug_flag, IID_PPV_ARGS(&m_factory)));
 	}
 
-	void Instance::enumerate_adapters()
+	void Instance::enumerate_adapter()
 	{
 		UINT adapter_index = 0;
 		UINT max_vram = 0;
 		ComPtr<IDXGIAdapter1> adapter, best_adapter;
+		spdlog::trace("Enumerating adapters");
 		while (m_factory->EnumAdapters1(adapter_index, &adapter) != DXGI_ERROR_NOT_FOUND)
 		{
 			DXGI_ADAPTER_DESC1 desc;
 			SLABB_CHECK(adapter->GetDesc1(&desc));
-			spdlog::info("Found Adapter: [{}], {}", adapter_index, desc.Description);
-			// No support for software renderer
+
+			// spdlog does not take wchar
+			std::string desc_string = StringUtils::convert_wchar_to_string(desc.Description);
+			spdlog::info("Found Adapter: [{}], {}", adapter_index, desc_string);
+
+			// We do not support WARP/software adapters
 			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) continue;
-			// Query gpu by most VRAM
 			if (desc.DedicatedVideoMemory > max_vram)
 			{
 				best_adapter = adapter;
 				max_vram = desc.DedicatedVideoMemory;
 			}
-
 			adapter_index++;
 		}
 		// For modern features support
