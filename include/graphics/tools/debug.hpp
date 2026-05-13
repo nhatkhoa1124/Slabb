@@ -21,5 +21,22 @@ namespace slabb::graphics::tools
 	}																			\
 
 #endif
+
+#ifndef NULL_CHECK
+	/**
+	* @brief This macro will throw an error if a null pointer is passed in
+	* @param ptr The pointer to be evaluated
+	*/
+#define NULL_CHECK(ptr)														\
+{																			\
+	if (ptr == nullptr)														\
+	{																		\
+		spdlog::error("Null pointer at: {} | {}", __FILE__, __LINE__);		\
+		throw std::runtime_error("ERROR: NULLPTR ERROR");					\
+	}																		\
+}																			\
+
+#endif
+
 }
 

@@ -12,11 +12,7 @@ namespace slabb::graphics::wrapper::command
 
 	void CommandQueue::create_command_queue(ID3D12Device* device)
 	{
-		if (!device)
-		{
-			spdlog::error("ERROR: No device detected while creating Command Queue");
-			throw std::runtime_error("NULLPTR ERROR");
-		}
+		NULL_CHECK(device);
 		D3D12_COMMAND_QUEUE_DESC cmdQueueDesc =
 		{
 			.Type = D3D12_COMMAND_LIST_TYPE_DIRECT,

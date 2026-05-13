@@ -7,6 +7,7 @@ set(SLABB_SOURCE_FILES
 	graphics/wrapper/window/window.cpp
 	graphics/tools/validation.cpp 
 	graphics/wrapper/command/command_queue.cpp
+	graphics/wrapper/swapchain.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})

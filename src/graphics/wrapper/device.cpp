@@ -12,11 +12,7 @@ namespace slabb::graphics::wrapper
 
 	void Device::create_device()
 	{
-		if (!m_instance)
-		{
-			spdlog::error("ERROR: No instance detected while creating device");
-			throw std::runtime_error("NULLPTR ERROR");
-		}
+		NULL_CHECK(m_instance);
 		m_instance->create_factory();
 		m_instance->enumerate_adapter();
 		spdlog::trace("Creating D3D12 device");
