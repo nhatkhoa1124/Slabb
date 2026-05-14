@@ -8,6 +8,7 @@ set(SLABB_SOURCE_FILES
 	graphics/tools/validation.cpp 
 	graphics/wrapper/command/command_queue.cpp
 	graphics/wrapper/swapchain.cpp
+	graphics/wrapper/descriptor/descriptor_heap.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
