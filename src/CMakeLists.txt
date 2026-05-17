@@ -9,6 +9,7 @@ set(SLABB_SOURCE_FILES
 	graphics/wrapper/command/command_queue.cpp
 	graphics/wrapper/swapchain.cpp
 	graphics/wrapper/descriptor/descriptor_heap.cpp
+	graphics/wrapper/command/command_allocator.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
