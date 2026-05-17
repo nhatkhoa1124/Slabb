@@ -35,3 +35,10 @@ FetchContent_Declare(gtest
 	GIT_SHALLOW ON
 	GIT_PROGRESS ON 
 )
+
+FetchContent_Declare(directx_headers
+	GIT_REPOSITORY https://github.com/microsoft/DirectX-Headers 
+	GIT_TAG v1.619.1
+	GIT_SHALLOW ON 
+	GIT_PROGRESS ON 
+)

@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(
 	spdlog
 	tomlplusplus
 	gtest
+	directx_headers
 )
 
 add_subdirectory(src)

@@ -32,4 +32,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	glfw
 	spdlog::spdlog
 	tomlplusplus::tomlplusplus
+	Microsoft::DirectX-Headers
 )

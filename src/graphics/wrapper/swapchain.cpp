@@ -11,6 +11,17 @@ namespace slabb::graphics::wrapper
 		m_height = height;
 	}
 
+	void Swapchain::get_buffers()
+	{
+		assert(!m_render_targets.empty());
+		for (size_t i = 0; i < m_render_targets.size(); i++)
+		{
+			SLABB_CHECK(m_swapchain->GetBuffer(i, IID_PPV_ARGS(&m_render_targets[i])));
+		}
+	}
+
+
+
 	void Swapchain::create_swapchain(HWND hWnd, ID3D12CommandQueue* cmd_queue, IDXGIFactory2* factory)
 	{
 		NULL_CHECK(hWnd);
