@@ -2,20 +2,24 @@
 #include "common/common_graphics.hpp"
 #include <directx/d3d12.h>
 
-#include "../swapchain.hpp"
+namespace slabb::graphics::wrapper
+{
+	class Swapchain;
+}
 
 using Microsoft::WRL::ComPtr;
-
-enum class HeapType
-{
-	RENDER_TARGET,	// RTV Heap
-	DEPTH,			// DSV Heap
-	RESOURCE		// CBV_UAV_SRV Heap
-};
+using slabb::graphics::wrapper::Swapchain;
 
 namespace slabb::graphics::wrapper::descriptor
 {
-	class DescriptorHeap
+	enum class HeapType
+	{
+		RENDER_TARGET,	// RTV Heap
+		DEPTH,			// DSV Heap
+		RESOURCE		// CBV_UAV_SRV Heap
+	};
+
+	class SLABB_EXPORT DescriptorHeap
 	{
 	public:
 		DescriptorHeap();

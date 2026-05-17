@@ -18,7 +18,8 @@ namespace slabb::graphics::wrapper::command
 			.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
 			.NodeMask = 0
 		};
-		spdlog::trace("Creating Command Queue");
+		spdlog::info("Creating Command Queue...");
 		SLABB_CHECK(device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmd_queue)));
+		spdlog::info("Command queue created successfully");
 	}
 }

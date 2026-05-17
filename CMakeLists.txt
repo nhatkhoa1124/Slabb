@@ -14,7 +14,7 @@ include(cmake/dependencies.cmake)
 
 FetchContent_MakeAvailable(
 	d3d12ma 
-	glfw 
+	glfw
 	spdlog
 	tomlplusplus
 	gtest

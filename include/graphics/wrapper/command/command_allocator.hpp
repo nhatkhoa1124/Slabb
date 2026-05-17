@@ -22,5 +22,6 @@ namespace slabb::graphics::wrapper::command
 
 	private:
 		ComPtr<ID3D12CommandAllocator> m_cmd_allocator;
+
 	};
 }

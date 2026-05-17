@@ -1,10 +1,10 @@
 #pragma once
-#include "common/common.hpp"
+#include "common/common_graphics.hpp"
 #include <string>
 
-struct GLFWwindow;
-
 enum class WindowMode{FULLSCREEN, WINDOWED, BORDERLESS_FULLSCREEN};
+
+struct GLFWwindow;
 
 namespace slabb::graphics::wrapper::window
 {
@@ -28,6 +28,7 @@ namespace slabb::graphics::wrapper::window
 		[[nodiscard]] inline std::string title() const { return m_title; }
 		[[nodiscard]] inline int width() const { return m_width; }
 		[[nodiscard]] inline int height() const { return m_height; }
+		[[nodiscard]] HWND get_native_handle() const;
 	private:
 		GLFWwindow* m_window;
 		WindowMode m_mode;

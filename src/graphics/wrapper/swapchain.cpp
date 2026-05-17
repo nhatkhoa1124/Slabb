@@ -20,9 +20,7 @@ namespace slabb::graphics::wrapper
 		}
 	}
 
-
-
-	void Swapchain::create_swapchain(HWND hWnd, ID3D12CommandQueue* cmd_queue, IDXGIFactory2* factory)
+	void Swapchain::create_swapchain(HWND hWnd, ID3D12CommandQueue* cmd_queue, IDXGIFactory4* factory)
 	{
 		NULL_CHECK(hWnd);
 		NULL_CHECK(cmd_queue);
@@ -33,14 +31,21 @@ namespace slabb::graphics::wrapper
 			.Width = m_width,
 			.Height = m_height,
 			.Format = m_format,
+			.SampleDesc = 
+			{
+				.Count = 1,
+				.Quality = 0
+			},
 			.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
 			.BufferCount = m_buffer_counts,
 			.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD
 		};
-		spdlog::trace("Creating swapchain");
+		spdlog::info("Creating swapchain...");
 
 		SLABB_CHECK(factory->CreateSwapChainForHwnd(
-			cmd_queue, hWnd, &desc, nullptr, nullptr, swapchain1.ReleaseAndGetAddressOf()));
+			cmd_queue, hWnd, &desc, nullptr, nullptr, swapchain1.GetAddressOf()));
+		SLABB_CHECK(swapchain1.As(&m_swapchain));
+		spdlog::info("Swaphain created successfully");
 	}
 
 	void Swapchain::set_width(const int width)

@@ -14,7 +14,7 @@ int main()
 	}
 	catch (const std::exception& exception)
 	{
-		std::cerr << "CRITICAL ERROR: In main: " << exception.what() << std::endl;
+		std::cerr << exception.what() << std::endl;
 		return -1;
 	}
 

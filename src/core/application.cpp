@@ -9,6 +9,7 @@ namespace slabb::core
 	Application::Application()
 	{
 		m_window = std::make_unique<Window>();
+		m_renderer = std::make_unique<Renderer>();
 	}
 
 	Application::~Application() 
@@ -18,13 +19,13 @@ namespace slabb::core
 
 	bool Application::init_subsystems()
 	{
-		spdlog::trace("Initializing application's subsystems");
+		spdlog::info("Initializing application's subsystems");
 		// Start application systems
 		load_toml_file("assets/config/application_cfg.toml");
-
-		// Init depending subsystems
+		// Initialize subsystems
 		m_window->init(m_config.title, m_config.mode, m_config.width, 
 					   m_config.height, m_config.resizable, m_config.visible);
+		m_renderer->init_backend(m_window->get_native_handle(), m_config.width, m_config.height);
 
 		return true;
 	}
@@ -34,8 +35,6 @@ namespace slabb::core
 		while (!m_window->should_close())
 		{
 			m_window->poll();
-
-
 		}
 	}
 

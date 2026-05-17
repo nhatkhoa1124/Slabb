@@ -19,7 +19,7 @@ namespace slabb::graphics::wrapper
 		* @param cmd_queue The command queue pointer
 		* @param factory The instance's factory pointer 
 		*/
-		void create_swapchain(HWND hWnd, ID3D12CommandQueue* cmd_queue, IDXGIFactory2* factory);
+		void create_swapchain(HWND hWnd, ID3D12CommandQueue* cmd_queue, IDXGIFactory4* factory);
 
 		/**
 		* @brief Get and populate buffers for render targets

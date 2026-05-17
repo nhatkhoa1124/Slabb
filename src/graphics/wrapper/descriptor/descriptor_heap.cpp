@@ -2,6 +2,7 @@
 #include <directx/d3dx12.h>
 
 #include "graphics/tools/debug.hpp"
+#include "graphics/wrapper/swapchain.hpp"
 
 namespace slabb::graphics::wrapper::descriptor
 {
@@ -18,10 +19,10 @@ namespace slabb::graphics::wrapper::descriptor
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
         desc.NumDescriptors = num_descriptors;
         desc.NodeMask = 0;
-
         switch (heap_type)
         {
         case HeapType::RENDER_TARGET:
+            spdlog::info("Creating {} heaps of type {}", num_descriptors, "Render Target");
             desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
             desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
             SLABB_CHECK(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_rtv_heap)));
@@ -29,6 +30,7 @@ namespace slabb::graphics::wrapper::descriptor
             break;
 
         case HeapType::DEPTH:
+            spdlog::info("Creating {} heaps of type {}", num_descriptors, "Depth");
             desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
             desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
             SLABB_CHECK(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_dsv_heap)));
@@ -36,12 +38,14 @@ namespace slabb::graphics::wrapper::descriptor
             break;
 
         case HeapType::RESOURCE:
+            spdlog::info("Creating {} heaps of type {}", num_descriptors, "Resource");
             desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
             desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
             SLABB_CHECK(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_resource_heap)));
             m_resource_descriptor_size = device->GetDescriptorHandleIncrementSize(desc.Type);
             break;
         }
+        spdlog::info("Descriptor heaps created successfully");
 	}
 
     void DescriptorHeap::create_render_target_view(ID3D12Device* device, const Swapchain& swapchain)
@@ -58,6 +62,7 @@ namespace slabb::graphics::wrapper::descriptor
             }
         };
 
+        spdlog::info("Creating render target views...");
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(get_rtv_heap_start());
         for (size_t i = 0; i < swapchain.buffer_count(); i++)
         {
