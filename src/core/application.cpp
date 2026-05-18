@@ -18,7 +18,7 @@ namespace slabb::core
 
 	bool Application::init_subsystems()
 	{
-		spdlog::info("Initializing application's subsystems");
+		spdlog::info("Initializing application's subsystems...");
 		// Start application systems
 		load_toml_file("assets/config/application_cfg.toml");
 		// Initialize subsystems

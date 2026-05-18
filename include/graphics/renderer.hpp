@@ -40,6 +40,7 @@ namespace slabb::graphics
 		Renderer(UINT window_width, UINT window_height);
 		~Renderer();
 		bool init_backend(HWND hWnd);
+		void load_assets();
 		void render_frame();
 	private:
 		std::unique_ptr<RenderGraph> m_render_graph;
