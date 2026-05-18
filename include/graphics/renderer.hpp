@@ -37,9 +37,9 @@ namespace slabb::graphics
 {
 	class SLABB_EXPORT Renderer {
 	public:
-		Renderer();
+		Renderer(UINT window_width, UINT window_height);
 		~Renderer();
-		void init_backend(HWND hWnd, UINT window_width, UINT window_height);
+		bool init_backend(HWND hWnd);
 		void render_frame();
 	private:
 		std::unique_ptr<RenderGraph> m_render_graph;

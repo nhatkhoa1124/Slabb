@@ -9,7 +9,6 @@ namespace slabb::core
 	Application::Application()
 	{
 		m_window = std::make_unique<Window>();
-		m_renderer = std::make_unique<Renderer>();
 	}
 
 	Application::~Application() 
@@ -25,7 +24,8 @@ namespace slabb::core
 		// Initialize subsystems
 		m_window->init(m_config.title, m_config.mode, m_config.width, 
 					   m_config.height, m_config.resizable, m_config.visible);
-		m_renderer->init_backend(m_window->get_native_handle(), m_config.width, m_config.height);
+		m_renderer = std::make_unique<Renderer>(m_config.width, m_config.height);
+		m_renderer->init_backend(m_window->get_native_handle());
 
 		return true;
 	}
@@ -35,6 +35,7 @@ namespace slabb::core
 		while (!m_window->should_close())
 		{
 			m_window->poll();
+			m_renderer->render_frame();
 		}
 	}
 
