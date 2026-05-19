@@ -1,6 +1,9 @@
 #pragma once
 #include "common/common_graphics.hpp"
 #include <memory>
+#include <vector>
+#include <string>
+#include "../core/core_interface/core_vertex.hpp"
 
 namespace slabb::graphics
 {
@@ -18,11 +21,17 @@ namespace slabb::graphics::wrapper::command
 {
 	class CommandAllocator;
 	class CommandQueue;
+	class RootSignature;
 }
 
 namespace slabb::graphics::wrapper::descriptor
 {
 	class DescriptorHeap;
+}
+
+namespace slabb::graphics::wrapper::pipeline
+{
+	class GraphicsPipeline;
 }
 
 using Microsoft::WRL::ComPtr;
@@ -32,6 +41,7 @@ using slabb::graphics::wrapper::Swapchain;
 using slabb::graphics::wrapper::command::CommandAllocator;
 using slabb::graphics::wrapper::command::CommandQueue;
 using slabb::graphics::wrapper::descriptor::DescriptorHeap;
+using slabb::graphics::wrapper::pipeline::GraphicsPipeline;
 
 namespace slabb::graphics
 {
@@ -39,7 +49,19 @@ namespace slabb::graphics
 	public:
 		Renderer(UINT window_width, UINT window_height);
 		~Renderer();
+
+		/**
+		* @brief This method initialize core structures in the renderer
+		* @param param The native window handler
+		*/
 		bool init_backend(HWND hWnd);
+
+		/**
+		* @brief This method initialize pipeline structures in the renderer
+		* @param vertex_attributes The vertex attribute interface 
+		*/
+		bool init_default_pipeline(const std::string& vertex_path, const std::string& pixel_path,
+							std::vector <core::VertexAttribute> vertex_attributes);
 		void load_assets();
 		void render_frame();
 	private:
@@ -50,6 +72,7 @@ namespace slabb::graphics
 		std::unique_ptr<CommandAllocator> m_cmd_allocator;
 		std::unique_ptr<CommandQueue> m_cmd_queue;
 		std::unique_ptr<DescriptorHeap> m_descriptor_heap;
+		std::unique_ptr<GraphicsPipeline> m_graphics_pipeline;
 	};
 }
 

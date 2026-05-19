@@ -8,7 +8,12 @@ add_custom_command(TARGET slabb-app POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 			${PROJECT_SOURCE_DIR}/assets
 			$<TARGET_FILE_DIR:slabb-app>/assets
-			DEPENDS ${ASSET_FILES}
+			DEPENDS ${ASSET_FILES} 
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+			${PROJECT_SOURCE_DIR}/shaders
+			$<TARGET_FILE_DIR:slabb-app>/shaders
+			DEPENDS ${ASSET_FILES} 
+	COMMENT "Deploying engine assets and shaders to build output directory..."
 )
 
 target_compile_features(slabb-app PRIVATE cxx_std_20)

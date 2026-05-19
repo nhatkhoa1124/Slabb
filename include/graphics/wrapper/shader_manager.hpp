@@ -8,11 +8,14 @@ using Microsoft::WRL::ComPtr;
 
 namespace slabb::graphics::wrapper
 {
+	/**
+	* @brief Manager class for shaders
+	*/
 	class SLABB_EXPORT ShaderManager
 	{
 	public:
 		ShaderManager();
-		[[nodiscard]] static ComPtr<ID3DBlob> compile_shaders(const std::wstring& path, const std::string& entrypoint,
+		[[nodiscard]] static ComPtr<ID3DBlob> compile_shader(const std::wstring& path, const std::string& entrypoint,
 															  const std::string& target);
 	private:
 

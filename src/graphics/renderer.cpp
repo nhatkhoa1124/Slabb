@@ -7,7 +7,12 @@
 #include "graphics/wrapper/command/command_allocator.hpp"
 #include "graphics/wrapper/command/command_queue.hpp"
 #include "graphics/wrapper/descriptor/descriptor_heap.hpp"
+#include "graphics/wrapper/pipeline/graphics_pipeline.hpp"
+#include "graphics/wrapper/root_signature.hpp"
+#include "graphics/graphics_interface/graphics_vertex.hpp"
 
+using namespace slabb::graphics;
+using namespace slabb::graphics::wrapper;
 using namespace slabb::graphics::wrapper::descriptor;
 
 namespace slabb::graphics
@@ -21,6 +26,7 @@ namespace slabb::graphics
 		m_cmd_allocator = std::make_unique<CommandAllocator>();
 		m_swapchain = std::make_unique<Swapchain>(window_width, window_height, DXGI_FORMAT_R8G8B8A8_UNORM);
 		m_descriptor_heap = std::make_unique<DescriptorHeap>();
+		m_graphics_pipeline = std::make_unique<GraphicsPipeline>();
 	}
 
 	Renderer::~Renderer()
@@ -47,6 +53,23 @@ namespace slabb::graphics
 		m_descriptor_heap->create_heap(HeapType::DEPTH, m_device->device(), 3);
 		m_descriptor_heap->create_heap(HeapType::RESOURCE, m_device->device(), 1024);
 
+		return true;
+	}
+
+	bool Renderer::init_default_pipeline(const std::string& vertex_path, const std::string& pixel_path,
+								  std::vector <core::VertexAttribute> vertex_attributes)
+	{
+		assert(!vertex_path.empty());
+		assert(!pixel_path.empty());
+
+		std::unique_ptr<RootSignature> default_signature = std::make_unique<RootSignature>();
+		default_signature->serialize_root_signature();
+		default_signature->create_root_signature(m_device->device());
+
+		m_graphics_pipeline->load_shaders(vertex_path, pixel_path);
+		const auto& input_elements = GraphicsVertex::get_vertex_input_layout(vertex_attributes);
+		m_graphics_pipeline->create_graphics_pipeline(m_device->device(), default_signature->root_signature(),
+													  input_elements);
 		return true;
 	}
 

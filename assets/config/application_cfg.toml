@@ -5,3 +5,12 @@ height = 900
 mode = "windowed"
 resizable = false # Disable window resizing
 visible = true # Window visible on startup
+
+[renderer.shader]
+vertex_files = [
+	"shaders/main.vertex.hlsl"
+]
+
+pixel_files = [
+	"shaders/main.pixel.hlsl"
+]

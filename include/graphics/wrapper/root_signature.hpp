@@ -12,6 +12,7 @@ namespace slabb::graphics::wrapper
 		RootSignature();
 		void create_root_signature(ID3D12Device* device);
 		bool serialize_root_signature();
+		[[nodiscard]] inline ID3D12RootSignature* root_signature() const { return m_root_signature.Get(); }
 	private:
 		ComPtr<ID3D12RootSignature> m_root_signature;
 		ComPtr<ID3DBlob> m_signature_blob;

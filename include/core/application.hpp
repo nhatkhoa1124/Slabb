@@ -2,6 +2,7 @@
 #include "common/common.hpp"
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "graphics/wrapper/window/window.hpp"
 #include "graphics/renderer.hpp"
@@ -21,6 +22,13 @@ namespace slabb::core
 		bool visible;
 	};
 
+	struct RendererConfig
+	{
+		// Shader file paths
+		std::vector<std::string> vertex_files;
+		std::vector<std::string> pixel_files;
+	};
+
 	class SLABB_EXPORT Application {
 	public:
 		Application();
@@ -29,7 +37,8 @@ namespace slabb::core
 		void run();
 		void load_toml_file(const std::string& path);
 	private:
-		AppConfig m_config{};
+		AppConfig m_app_config{};
+		RendererConfig m_renderer_config{};
 
 		std::unique_ptr<Window> m_window;
 		std::unique_ptr<Renderer> m_renderer;
