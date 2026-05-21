@@ -9,7 +9,7 @@ namespace slabb::graphics::wrapper::command
 	class SLABB_EXPORT CommandAllocator
 	{
 	public:
-		CommandAllocator();
+		CommandAllocator() = default;
 
 		/**
 		* @brief Creates a command allocator

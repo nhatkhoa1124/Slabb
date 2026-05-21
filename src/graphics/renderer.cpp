@@ -5,6 +5,7 @@
 #include "graphics/wrapper/device.hpp"
 #include "graphics/wrapper/swapchain.hpp"
 #include "graphics/wrapper/command/command_allocator.hpp"
+#include "graphics/wrapper/command/command_list.hpp"
 #include "graphics/wrapper/command/command_queue.hpp"
 #include "graphics/wrapper/descriptor/descriptor_heap.hpp"
 #include "graphics/wrapper/pipeline/graphics_pipeline.hpp"
@@ -23,7 +24,7 @@ namespace slabb::graphics
 		m_instance = std::make_unique<Instance>();
 		m_device = std::make_unique<Device>();
 		m_cmd_queue = std::make_unique<CommandQueue>(D3D12_COMMAND_LIST_TYPE_DIRECT);
-		m_cmd_allocator = std::make_unique<CommandAllocator>();
+		m_cmd_list = std::make_unique<CommandList>();
 		m_swapchain = std::make_unique<Swapchain>(window_width, window_height, DXGI_FORMAT_R8G8B8A8_UNORM);
 		m_descriptor_heap = std::make_unique<DescriptorHeap>();
 		m_graphics_pipeline = std::make_unique<GraphicsPipeline>();
@@ -43,11 +44,16 @@ namespace slabb::graphics
 		m_device->create_device(m_instance->adapter());
 		// Command queue creation
 		m_cmd_queue->create_command_queue(m_device->device());
-		// Command allocator creation
-		m_cmd_allocator->create_allocator(m_device->device(), m_cmd_queue->command_list_type());
 		// Swapchain creation
 		m_swapchain->create_swapchain(hWnd, m_cmd_queue->command_queue(), m_instance->factory());
 		m_swapchain->get_buffers();
+		// Command allocator creation
+		m_cmd_allocators.resize(m_swapchain->buffer_count());
+		for (auto& allocator : m_cmd_allocators)
+		{
+			allocator = std::make_unique<CommandAllocator>();
+			allocator->create_allocator(m_device->device(), m_cmd_queue->command_list_type());
+		}
 		// Descriptor heaps creation
 		m_descriptor_heap->create_heap(HeapType::RENDER_TARGET, m_device->device(), 2);
 		m_descriptor_heap->create_heap(HeapType::DEPTH, m_device->device(), 3);
@@ -61,15 +67,19 @@ namespace slabb::graphics
 	{
 		assert(!vertex_path.empty());
 		assert(!pixel_path.empty());
-
+		// Create root signature & graphics pipeline
 		std::unique_ptr<RootSignature> default_signature = std::make_unique<RootSignature>();
 		default_signature->serialize_root_signature();
 		default_signature->create_root_signature(m_device->device());
-
 		m_graphics_pipeline->load_shaders(vertex_path, pixel_path);
 		const auto& input_elements = GraphicsVertex::get_vertex_input_layout(vertex_attributes);
 		m_graphics_pipeline->create_graphics_pipeline(m_device->device(), default_signature->root_signature(),
 													  input_elements);
+		// Create command list
+		// Hard-coding first allocator here!!!
+		m_cmd_list->create_command_list(m_device->device(), m_cmd_queue->command_list_type(),
+										m_cmd_allocators[0]->allocator(), nullptr);
+
 		return true;
 	}
 

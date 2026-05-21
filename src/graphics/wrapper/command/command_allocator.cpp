@@ -4,11 +4,6 @@
 
 namespace slabb::graphics::wrapper::command
 {
-	CommandAllocator::CommandAllocator()
-	{
-
-	}
-
 	void CommandAllocator::create_allocator(ID3D12Device* device, const D3D12_COMMAND_LIST_TYPE cmd_list_type)
 	{
 		NULL_CHECK(device);

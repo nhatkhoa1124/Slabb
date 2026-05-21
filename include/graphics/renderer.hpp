@@ -20,6 +20,7 @@ namespace slabb::graphics::wrapper
 namespace slabb::graphics::wrapper::command
 {
 	class CommandAllocator;
+	class CommandList;
 	class CommandQueue;
 	class RootSignature;
 }
@@ -39,6 +40,7 @@ using slabb::graphics::wrapper::Device;
 using slabb::graphics::wrapper::Instance;
 using slabb::graphics::wrapper::Swapchain;
 using slabb::graphics::wrapper::command::CommandAllocator;
+using slabb::graphics::wrapper::command::CommandList;
 using slabb::graphics::wrapper::command::CommandQueue;
 using slabb::graphics::wrapper::descriptor::DescriptorHeap;
 using slabb::graphics::wrapper::pipeline::GraphicsPipeline;
@@ -69,7 +71,8 @@ namespace slabb::graphics
 		std::unique_ptr<Instance> m_instance;
 		std::unique_ptr<Device> m_device;
 		std::unique_ptr<Swapchain> m_swapchain;
-		std::unique_ptr<CommandAllocator> m_cmd_allocator;
+		std::vector<std::unique_ptr<CommandAllocator>> m_cmd_allocators;
+		std::unique_ptr<CommandList> m_cmd_list;
 		std::unique_ptr<CommandQueue> m_cmd_queue;
 		std::unique_ptr<DescriptorHeap> m_descriptor_heap;
 		std::unique_ptr<GraphicsPipeline> m_graphics_pipeline;
