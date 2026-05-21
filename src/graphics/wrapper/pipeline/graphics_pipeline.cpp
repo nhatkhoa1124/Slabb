@@ -1,4 +1,5 @@
 #include "graphics/wrapper/pipeline/graphics_pipeline.hpp"
+#include <directx/d3dx12.h>
 
 #include "graphics/tools/debug.hpp"
 #include "graphics/wrapper/shader_manager.hpp"
@@ -34,9 +35,25 @@ namespace slabb::graphics::wrapper::pipeline
 
 		GraphicsPipelineBuilder builder = {};
 		builder.with_root_signature(root_signature);
+		builder.with_input_layout(input_layout);
 		builder.with_vertex_shader(vs_bytecode);
 		builder.with_pixel_shader(ps_bytecode);
-		builder.with_input_layout(input_layout);
+		builder.with_rasterizer_state(CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT));
+		builder.with_blend_state(CD3DX12_BLEND_DESC(D3D12_DEFAULT));
+		builder.with_depth_stencil_state(
+			D3D12_DEPTH_STENCIL_DESC 
+			{
+				.DepthEnable = false,
+				.StencilEnable = false
+			}
+		);
+		builder.with_sample_mask(UINT_MAX);
+		builder.with_sample_desc(
+			DXGI_SAMPLE_DESC
+			{
+				.Count = 1 // No AA, take 1 sample only
+			}
+		);
 		builder.with_primitive_topology_type(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 		builder.with_num_render_targets(1);
 		builder.with_rtv_format(0, DXGI_FORMAT_R8G8B8A8_UNORM);
