@@ -4,43 +4,25 @@
 #include <string>
 #include <vector>
 
+#include "systems/config_system.hpp"
+#include "systems/render_system.hpp"
 #include "graphics/wrapper/window/window.hpp"
-#include "graphics/renderer.hpp"
 
+using slabb::core::systems::ConfigSystem;
+using slabb::core::systems::RenderSystem;
 using slabb::graphics::wrapper::window::Window;
-using slabb::graphics::Renderer;
 
 namespace slabb::core
 {
-	struct AppConfig {
-		// Window settings
-		std::string title;
-		WindowMode mode;
-		int width;
-		int height;
-		bool resizable;
-		bool visible;
-	};
-
-	struct RendererConfig
-	{
-		// Shader file paths
-		std::vector<std::string> vertex_files;
-		std::vector<std::string> pixel_files;
-	};
-
 	class SLABB_EXPORT Application {
 	public:
 		Application();
 		~Application();
 		bool init_subsystems();
 		void run();
-		void load_toml_file(const std::string& path);
 	private:
-		AppConfig m_app_config{};
-		RendererConfig m_renderer_config{};
-
 		std::unique_ptr<Window> m_window;
-		std::unique_ptr<Renderer> m_renderer;
+		std::unique_ptr<ConfigSystem> m_config_system;
+		std::unique_ptr<RenderSystem> m_render_system;
 	};
 }
