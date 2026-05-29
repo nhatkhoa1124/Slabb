@@ -1,4 +1,4 @@
-#include "graphics/wrapper/descriptor/descriptor_heap.hpp"
+#include "graphics/wrapper/resource/descriptor_heap.hpp"
 #include <directx/d3dx12.h>
 
 #include "graphics/tools/debug.hpp"
@@ -11,7 +11,7 @@ namespace slabb::graphics::wrapper::descriptor
 	{
     }
 
-	void DescriptorHeap::create_heap(HeapType heap_type, ID3D12Device* device, int num_descriptors)
+	void DescriptorHeap::create_heap(DescriptorHeapType heap_type, ID3D12Device* device, int num_descriptors)
 	{
 		assert(num_descriptors > 0);
 		NULL_CHECK(device);
@@ -21,7 +21,7 @@ namespace slabb::graphics::wrapper::descriptor
         desc.NodeMask = 0;
         switch (heap_type)
         {
-        case HeapType::RENDER_TARGET:
+        case DescriptorHeapType::RENDER_TARGET:
             spdlog::info("Creating {} heaps of type {}", num_descriptors, "Render Target");
             desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
             desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -29,7 +29,7 @@ namespace slabb::graphics::wrapper::descriptor
             m_rtv_descriptor_size = device->GetDescriptorHandleIncrementSize(desc.Type);
             break;
 
-        case HeapType::DEPTH:
+        case DescriptorHeapType::DEPTH:
             spdlog::info("Creating {} heaps of type {}", num_descriptors, "Depth");
             desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
             desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -37,7 +37,7 @@ namespace slabb::graphics::wrapper::descriptor
             m_dsv_descriptor_size = device->GetDescriptorHandleIncrementSize(desc.Type);
             break;
 
-        case HeapType::RESOURCE:
+        case DescriptorHeapType::RESOURCE:
             spdlog::info("Creating {} heaps of type {}", num_descriptors, "Resource");
             desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
             desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;

@@ -8,18 +8,19 @@ set(SLABB_SOURCE_FILES
 	graphics/tools/validation.cpp 
 	graphics/wrapper/command/command_queue.cpp
 	graphics/wrapper/swapchain.cpp
-	graphics/wrapper/descriptor/descriptor_heap.cpp
+	graphics/wrapper/resource/descriptor_heap.cpp
 	graphics/wrapper/command/command_allocator.cpp
 	graphics/wrapper/root_signature.cpp
 	graphics/wrapper/pipeline/graphics_pipeline.cpp
 	graphics/wrapper/shader_manager.cpp
 	core/core_interface/core_vertex.cpp 
 	graphics/graphics_interface/graphics_vertex.cpp 
-	core/model/mesh.cpp 
+	 
 	graphics/wrapper/command/command_list.cpp
 	core/systems/render_system.cpp
 	core/systems/config_system.cpp
-)
+	core/model/model.cpp
+ "graphics/wrapper/resource/resource_heap.cpp")
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
 

@@ -15,6 +15,7 @@ namespace slabb::graphics::wrapper::command
 		CommandList();
 		void create_command_list(ID3D12Device* device, D3D12_COMMAND_LIST_TYPE type, 
 								 ID3D12CommandAllocator* allocator, ID3D12PipelineState* pipeline_state = nullptr);
+		void upload_vertex_buffer();
 		void close();
 		inline void set_pipline_state(ID3D12PipelineState* pipeline_state) const
 		{

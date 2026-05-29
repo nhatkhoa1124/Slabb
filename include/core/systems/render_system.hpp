@@ -1,11 +1,14 @@
 #pragma once
 #include "common/common.hpp"
 #include <memory>
+#include <vector>
 
 #include "config_system.hpp"
 #include "graphics/renderer.hpp"
 
 using slabb::graphics::Renderer;
+
+class Model;
 
 namespace slabb::core::systems
 {
@@ -18,6 +21,8 @@ namespace slabb::core::systems
 		void cleanup();
 
 		[[nodiscard]] inline Renderer* renderer() { return m_renderer.get(); }
+	private:
+		void draw_mesh(std::vector<Model> models);
 	private:
 		std::unique_ptr<Renderer> m_renderer;
 	};

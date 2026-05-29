@@ -7,7 +7,7 @@
 #include "graphics/wrapper/command/command_allocator.hpp"
 #include "graphics/wrapper/command/command_list.hpp"
 #include "graphics/wrapper/command/command_queue.hpp"
-#include "graphics/wrapper/descriptor/descriptor_heap.hpp"
+#include "graphics/wrapper/resource/descriptor_heap.hpp"
 #include "graphics/wrapper/pipeline/graphics_pipeline.hpp"
 #include "graphics/wrapper/root_signature.hpp"
 #include "graphics/graphics_interface/graphics_vertex.hpp"
@@ -58,9 +58,9 @@ namespace slabb::graphics
 			allocator->create_allocator(m_device->device(), m_cmd_queue->command_list_type());
 		}
 		// Descriptor heaps creation
-		m_descriptor_heap->create_heap(HeapType::RENDER_TARGET, m_device->device(), 2);
-		m_descriptor_heap->create_heap(HeapType::DEPTH, m_device->device(), 3);
-		m_descriptor_heap->create_heap(HeapType::RESOURCE, m_device->device(), 1024);
+		m_descriptor_heap->create_heap(DescriptorHeapType::RENDER_TARGET, m_device->device(), 2);
+		m_descriptor_heap->create_heap(DescriptorHeapType::DEPTH, m_device->device(), 3);
+		m_descriptor_heap->create_heap(DescriptorHeapType::RESOURCE, m_device->device(), 1024);
 
 		return true;
 	}

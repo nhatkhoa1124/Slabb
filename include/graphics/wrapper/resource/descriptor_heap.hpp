@@ -12,7 +12,7 @@ using slabb::graphics::wrapper::Swapchain;
 
 namespace slabb::graphics::wrapper::descriptor
 {
-	enum class HeapType
+	enum class DescriptorHeapType
 	{
 		RENDER_TARGET,	// RTV Heap
 		DEPTH,			// DSV Heap
@@ -30,7 +30,7 @@ namespace slabb::graphics::wrapper::descriptor
 		* @param device The pointer to device that stores the heap
 		* @param num_descriptors The number of desriptors in a heap to create
 		*/
-		void create_heap(HeapType heap_type, ID3D12Device* device, int num_descriptors);
+		void create_heap(DescriptorHeapType heap_type, ID3D12Device* device, int num_descriptors);
 
 		/*
 		* @brief Create a render target view 
