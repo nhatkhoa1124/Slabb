@@ -17,6 +17,7 @@ namespace slabb::graphics::wrapper::command
 		* @param cmd_list_type The command list type, must match with the command queue's list type
 		*/
 		void create_allocator(ID3D12Device* device, const D3D12_COMMAND_LIST_TYPE cmd_list_type);
+		void reset();
 
 		[[nodiscard]] inline ID3D12CommandAllocator* allocator() const { return m_cmd_allocator.Get(); }
 

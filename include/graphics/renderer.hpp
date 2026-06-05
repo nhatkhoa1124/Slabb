@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+
 #include "../core/core_interface/core_vertex.hpp"
 
 namespace slabb::graphics
@@ -45,6 +46,8 @@ using slabb::graphics::wrapper::command::CommandQueue;
 using slabb::graphics::wrapper::descriptor::DescriptorHeap;
 using slabb::graphics::wrapper::pipeline::GraphicsPipeline;
 
+struct ID3D12PipelineState;
+
 namespace slabb::graphics
 {
 	class SLABB_EXPORT Renderer {
@@ -65,6 +68,13 @@ namespace slabb::graphics
 		bool init_default_pipeline(const std::string& vertex_path, const std::string& pixel_path,
 							std::vector <core::VertexAttribute> vertex_attributes);
 		void load_assets();
+
+		/**
+		* @brief Record command for command list
+		*/
+		template<typename T>
+		void record_command(ID3D12PipelineState* pipline_state, T&& callback);
+
 		void render_frame();
 	private:
 		std::unique_ptr<RenderGraph> m_render_graph;

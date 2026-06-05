@@ -11,4 +11,9 @@ namespace slabb::graphics::wrapper::command
 		SLABB_CHECK(device->CreateCommandAllocator(cmd_list_type, IID_PPV_ARGS(&m_cmd_allocator)));
 		spdlog::info("Command allocator created successfully");
 	}
+
+	void CommandAllocator::reset()
+	{
+		SLABB_CHECK(m_cmd_allocator->Reset());
+	}
 }

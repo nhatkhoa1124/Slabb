@@ -1,4 +1,5 @@
 #include "graphics/renderer.hpp"
+#include <directx/d3dx12.h>
 
 #include "graphics/render_graph.hpp"
 #include "graphics/wrapper/instance.hpp"
@@ -20,7 +21,7 @@ namespace slabb::graphics
 {
 	Renderer::Renderer(UINT window_width, UINT window_height)
 	{
-		m_render_graph = std::make_unique<RenderGraph>();
+		m_render_graph = std::make_unique<RenderGraph>(window_width, window_height);
 		m_instance = std::make_unique<Instance>();
 		m_device = std::make_unique<Device>();
 		m_cmd_queue = std::make_unique<CommandQueue>(D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -85,6 +86,37 @@ namespace slabb::graphics
 		m_cmd_list->close();
 
 		return true;
+	}
+
+	template<typename T>
+	void Renderer::record_command(ID3D12PipelineState* pipline_state, T&& callback)
+	{
+		UINT current_frame = m_swapchain->current_backbuffer();
+		m_cmd_allocators[current_frame]->reset();
+		m_cmd_list->reset(m_cmd_allocators[current_frame]->allocator(), pipline_state);
+		m_cmd_list->set_root_signature(m_graphics_pipeline->root_signature());
+		m_cmd_list->set_viewport(1, &m_render_graph->render_resource.viewport);
+		m_cmd_list->set_scissor_rect(1, &m_render_graph->render_resource.rect);
+
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_swapchain->render_target(current_frame),
+																  D3D12_RESOURCE_STATE_PRESENT,
+																  D3D12_RESOURCE_STATE_RENDER_TARGET);
+		m_cmd_list->set_resource_barrier(1, &barrier);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_descriptor_heap->get_rtv_heap_start(), current_frame,
+												 m_descriptor_heap->rtv_heap_size());
+		m_cmd_list->set_render_target(1, &rtv_handle, nullptr);
+
+		// Start recording
+		callback(m_cmd_list->command_list());
+		// Recording end 
+
+		const float clear_color[4] = {0.1f, 0.2f, 0.3f, 1.0f};
+		m_cmd_list->clear_screen(rtv_handle, clear_color);
+		barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_swapchain->render_target(current_frame),
+																  D3D12_RESOURCE_STATE_RENDER_TARGET,
+																  D3D12_RESOURCE_STATE_PRESENT);
+		m_cmd_list->set_resource_barrier(1, &barrier);
+		m_cmd_list->close();
 	}
 
 	void Renderer::render_frame()

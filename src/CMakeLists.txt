@@ -15,12 +15,12 @@ set(SLABB_SOURCE_FILES
 	graphics/wrapper/shader_manager.cpp
 	core/core_interface/core_vertex.cpp 
 	graphics/graphics_interface/graphics_vertex.cpp 
-	 
 	graphics/wrapper/command/command_list.cpp
 	core/systems/render_system.cpp
 	core/systems/config_system.cpp
 	core/model/model.cpp
- "graphics/wrapper/resource/resource_heap.cpp" "graphics/wrapper/synchronization/fence.cpp")
+	graphics/wrapper/resource/resource_heap.cpp 
+	graphics/wrapper/synchronization/fence.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
 
