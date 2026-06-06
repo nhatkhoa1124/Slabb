@@ -14,6 +14,7 @@ namespace slabb::graphics::wrapper::synchronization
 		spdlog::info("Creating fence...");
 		SLABB_CHECK(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
 		m_fence_value = 1;
+		create_fence_event();
 		spdlog::info("Fence created successfully");
 	}
 
@@ -36,8 +37,7 @@ namespace slabb::graphics::wrapper::synchronization
 		if (m_fence->GetCompletedValue() < m_fence_value)
 		{
 			m_fence->SetEventOnCompletion(m_fence_value, m_fence_event);
-			WaitForSingleObject(m_fence_event, INFINITY); // Waits indefinitely on CPU
+			WaitForSingleObject(m_fence_event, INFINITE); // Waits indefinitely on CPU
 		}
-
 	}
 }

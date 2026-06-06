@@ -11,6 +11,7 @@
 #include "graphics/wrapper/resource/descriptor_heap.hpp"
 #include "graphics/wrapper/pipeline/graphics_pipeline.hpp"
 #include "graphics/wrapper/root_signature.hpp"
+#include "graphics/wrapper/synchronization/fence.hpp"
 #include "graphics/graphics_interface/graphics_vertex.hpp"
 
 using namespace slabb::graphics;
@@ -24,6 +25,7 @@ namespace slabb::graphics
 		m_render_graph = std::make_unique<RenderGraph>(window_width, window_height);
 		m_instance = std::make_unique<Instance>();
 		m_device = std::make_unique<Device>();
+		m_swapchain = std::make_unique<Swapchain>(window_width, window_height, DXGI_FORMAT_R8G8B8A8_UNORM);
 		m_cmd_queue = std::make_unique<CommandQueue>(D3D12_COMMAND_LIST_TYPE_DIRECT);
 		m_cmd_list = std::make_unique<CommandList>();
 		m_cmd_allocators.resize(m_swapchain->buffer_count());
@@ -31,14 +33,21 @@ namespace slabb::graphics
 		{
 			allocator = std::make_unique<CommandAllocator>();
 		}
-		m_swapchain = std::make_unique<Swapchain>(window_width, window_height, DXGI_FORMAT_R8G8B8A8_UNORM);
+		m_fences.resize(m_swapchain->buffer_count());
+		for (auto& fence : m_fences)
+		{
+			fence = std::make_unique<Fence>();
+		}
 		m_descriptor_heap = std::make_unique<DescriptorHeap>();
 		m_graphics_pipeline = std::make_unique<GraphicsPipeline>();
 	}
 
 	Renderer::~Renderer()
 	{
-
+		if (m_cmd_queue && !m_fences.empty())
+		{
+			m_fences[0]->wait_for_fence(m_cmd_queue->command_queue());
+		}
 	}
 
 	bool Renderer::init_backend(HWND hWnd)
@@ -58,10 +67,23 @@ namespace slabb::graphics
 		{
 			allocator->create_allocator(m_device->device(), m_cmd_queue->command_list_type());
 		}
+		// Fence creation
+		for (auto& fence : m_fences)
+		{
+			fence->create_fence(m_device->device());
+		}
 		// Descriptor heaps creation
 		m_descriptor_heap->create_heap(DescriptorHeapType::RENDER_TARGET, m_device->device(), 2);
 		m_descriptor_heap->create_heap(DescriptorHeapType::DEPTH, m_device->device(), 3);
 		m_descriptor_heap->create_heap(DescriptorHeapType::RESOURCE, m_device->device(), 1024);
+		// Render target view creation
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_descriptor_heap->get_rtv_heap_start());
+		for (UINT i = 0; i < m_swapchain->buffer_count(); ++i)
+		{
+			ID3D12Resource* backbuffer = m_swapchain->render_target(i);
+			m_device->device()->CreateRenderTargetView(backbuffer, nullptr, rtv_handle);
+			rtv_handle.Offset(1, m_descriptor_heap->rtv_heap_size());
+		}
 
 		return true;
 	}
@@ -88,40 +110,22 @@ namespace slabb::graphics
 		return true;
 	}
 
-	template<typename T>
-	void Renderer::record_command(ID3D12PipelineState* pipline_state, T&& callback)
-	{
-		UINT current_frame = m_swapchain->current_backbuffer();
-		m_cmd_allocators[current_frame]->reset();
-		m_cmd_list->reset(m_cmd_allocators[current_frame]->allocator(), pipline_state);
-		m_cmd_list->set_root_signature(m_graphics_pipeline->root_signature());
-		m_cmd_list->set_viewport(1, &m_render_graph->render_resource.viewport);
-		m_cmd_list->set_scissor_rect(1, &m_render_graph->render_resource.rect);
-
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_swapchain->render_target(current_frame),
-																  D3D12_RESOURCE_STATE_PRESENT,
-																  D3D12_RESOURCE_STATE_RENDER_TARGET);
-		m_cmd_list->set_resource_barrier(1, &barrier);
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_descriptor_heap->get_rtv_heap_start(), current_frame,
-												 m_descriptor_heap->rtv_heap_size());
-		m_cmd_list->set_render_target(1, &rtv_handle, nullptr);
-
-		// Start recording
-		callback(m_cmd_list->command_list());
-		// Recording end 
-
-		const float clear_color[4] = {0.1f, 0.2f, 0.3f, 1.0f};
-		m_cmd_list->clear_screen(rtv_handle, clear_color);
-		barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_swapchain->render_target(current_frame),
-																  D3D12_RESOURCE_STATE_RENDER_TARGET,
-																  D3D12_RESOURCE_STATE_PRESENT);
-		m_cmd_list->set_resource_barrier(1, &barrier);
-		m_cmd_list->close();
-	}
-
 	void Renderer::render_frame()
 	{
+		UINT current_frame = m_swapchain->current_backbuffer();
+		m_fences[current_frame]->wait_for_fence(m_cmd_queue->command_queue());
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_descriptor_heap->get_rtv_heap_start(), current_frame,
+			m_descriptor_heap->rtv_heap_size());
 
+		m_cmd_list->record_command(m_cmd_allocators[current_frame]->allocator(), m_swapchain->render_target(current_frame),
+								   m_graphics_pipeline->root_signature(), &rtv_handle, 
+								   &m_render_graph->render_resource().viewport, &m_render_graph->render_resource().rect,
+								   m_graphics_pipeline->pipeline_state_object(), nullptr);
+
+		ID3D12CommandList* pp_cmd_list[] = { m_cmd_list->command_list() };
+		m_cmd_queue->execute_command_list(1, pp_cmd_list);
+		m_swapchain->present(1, 0);
+		
 	}
 
 }

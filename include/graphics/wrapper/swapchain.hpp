@@ -25,6 +25,8 @@ namespace slabb::graphics::wrapper
 		* @brief Get and populate buffers for render targets
 		*/
 		void get_buffers();
+		
+		void present(UINT sync_interval, UINT flags);
 
 		[[nodiscard]] inline IDXGISwapChain4* swapchain() const { return m_swapchain.Get(); }
 		[[nodiscard]] inline UINT width() const { return m_width; }

@@ -11,6 +11,13 @@ namespace slabb::graphics::wrapper::command
 	public:
 		CommandQueue(D3D12_COMMAND_LIST_TYPE cmd_list_type);
 		void create_command_queue(ID3D12Device* device);
+		
+		/**
+		* @brief Executes a list of command lists
+		* @param count The number of command lists to execute
+		* @param pp_cmd_list Pointer to the command lists array
+		*/
+		void execute_command_list(UINT count, ID3D12CommandList* const* pp_cmd_list);
 
 		[[nodiscard]] inline ID3D12CommandQueue* command_queue() const { return m_cmd_queue.Get(); }
 		[[nodiscard]] inline D3D12_COMMAND_LIST_TYPE command_list_type() const { return m_list_type; }

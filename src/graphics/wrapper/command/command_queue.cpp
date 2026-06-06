@@ -22,4 +22,11 @@ namespace slabb::graphics::wrapper::command
 		SLABB_CHECK(device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmd_queue)));
 		spdlog::info("Command queue created successfully");
 	}
+
+	void CommandQueue::execute_command_list(UINT count, ID3D12CommandList* const* pp_cmd_list)
+	{
+		assert(count > 0);
+		NULL_CHECK(pp_cmd_list);
+		m_cmd_queue->ExecuteCommandLists(count, pp_cmd_list);
+	}
 }

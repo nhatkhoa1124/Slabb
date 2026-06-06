@@ -20,6 +20,11 @@ namespace slabb::graphics::wrapper
 		}
 	}
 
+	void Swapchain::present(UINT sync_interval, UINT flags)
+	{
+		SLABB_CHECK(m_swapchain->Present(sync_interval, flags));
+	}
+
 	void Swapchain::create_swapchain(HWND hWnd, ID3D12CommandQueue* cmd_queue, IDXGIFactory4* factory)
 	{
 		NULL_CHECK(hWnd);

@@ -36,6 +36,11 @@ namespace slabb::graphics::wrapper::pipeline
 	class GraphicsPipeline;
 }
 
+namespace slabb::graphics::wrapper::synchronization
+{
+	class Fence;
+}
+
 using Microsoft::WRL::ComPtr;
 using slabb::graphics::wrapper::Device;
 using slabb::graphics::wrapper::Instance;
@@ -45,6 +50,7 @@ using slabb::graphics::wrapper::command::CommandList;
 using slabb::graphics::wrapper::command::CommandQueue;
 using slabb::graphics::wrapper::descriptor::DescriptorHeap;
 using slabb::graphics::wrapper::pipeline::GraphicsPipeline;
+using slabb::graphics::wrapper::synchronization::Fence;
 
 struct ID3D12PipelineState;
 
@@ -68,13 +74,6 @@ namespace slabb::graphics
 		bool init_default_pipeline(const std::string& vertex_path, const std::string& pixel_path,
 							std::vector <core::VertexAttribute> vertex_attributes);
 		void load_assets();
-
-		/**
-		* @brief Record command for command list
-		*/
-		template<typename T>
-		void record_command(ID3D12PipelineState* pipline_state, T&& callback);
-
 		void render_frame();
 	private:
 		std::unique_ptr<RenderGraph> m_render_graph;
@@ -86,6 +85,7 @@ namespace slabb::graphics
 		std::unique_ptr<CommandQueue> m_cmd_queue;
 		std::unique_ptr<DescriptorHeap> m_descriptor_heap;
 		std::unique_ptr<GraphicsPipeline> m_graphics_pipeline;
+		std::vector<std::unique_ptr<Fence>> m_fences;
 	};
 }
 
