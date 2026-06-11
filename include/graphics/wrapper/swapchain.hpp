@@ -28,20 +28,20 @@ namespace slabb::graphics::wrapper
 		
 		void present(UINT sync_interval, UINT flags);
 
-		[[nodiscard]] inline IDXGISwapChain4* swapchain() const { return m_swapchain.Get(); }
-		[[nodiscard]] inline UINT width() const { return m_width; }
-		[[nodiscard]] inline UINT height() const { return m_height; }
-		[[nodiscard]] inline DXGI_FORMAT format() const { return m_format; }
-		[[nodiscard]] inline UINT current_backbuffer() { return m_swapchain->GetCurrentBackBufferIndex(); }
-		[[nodiscard]] inline ID3D12Resource* render_target (const UINT index) const 
+		[[nodiscard]] IDXGISwapChain4* swapchain() const { return m_swapchain.Get(); }
+		[[nodiscard]] UINT width() const { return m_width; }
+		[[nodiscard]] UINT height() const { return m_height; }
+		[[nodiscard]] DXGI_FORMAT format() const { return m_format; }
+		[[nodiscard]] UINT current_backbuffer() { return m_swapchain->GetCurrentBackBufferIndex(); }
+		[[nodiscard]] ID3D12Resource* render_target (const UINT index) const 
 		{ 
 			return m_render_targets[index].Get(); 
 		}
-		[[nodiscard]] inline UINT buffer_count() const { return m_buffer_counts; };
+		[[nodiscard]] UINT buffer_count() const { return m_buffer_counts; };
 
 		void set_width(const int width);
 		void set_height(const int height);
-		inline void set_format(DXGI_FORMAT format) { m_format = format; }
+		void set_format(DXGI_FORMAT format) { m_format = format; }
 	private:
 		UINT m_width;
 		UINT m_height;

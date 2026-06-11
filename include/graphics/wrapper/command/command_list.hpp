@@ -36,12 +36,12 @@ namespace slabb::graphics::wrapper::command
 		void set_resource_barrier(UINT num_barriers, const D3D12_RESOURCE_BARRIER* barrier) const;
 		void set_render_target(UINT num_render_targets, const D3D12_CPU_DESCRIPTOR_HANDLE* rtv_handle,
 							   const D3D12_CPU_DESCRIPTOR_HANDLE* dsv_handle) const;
-		inline void set_pipline_state(ID3D12PipelineState* pipeline_state) const
+		void set_pipline_state(ID3D12PipelineState* pipeline_state) const
 		{
 			m_cmd_list->SetPipelineState(pipeline_state); 
 		}
 
-		[[nodiscard]] inline ID3D12GraphicsCommandList* command_list() const { return m_cmd_list.Get(); }
+		[[nodiscard]] ID3D12GraphicsCommandList* command_list() const { return m_cmd_list.Get(); }
 	private:
 		ComPtr<ID3D12GraphicsCommandList> m_cmd_list;
 	};

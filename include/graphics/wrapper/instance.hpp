@@ -24,8 +24,8 @@ namespace slabb::graphics::wrapper
 		*/
 		void enumerate_adapter();
 
-		[[nodiscard]] inline IDXGIFactory4* factory() const { return m_factory.Get(); }
-		[[nodiscard]] inline IDXGIAdapter4* adapter() const { return m_adapter.Get(); }
+		[[nodiscard]] IDXGIFactory4* factory() const { return m_factory.Get(); }
+		[[nodiscard]] IDXGIAdapter4* adapter() const { return m_adapter.Get(); }
 
 	private:
 		ComPtr<IDXGIFactory4> m_factory;

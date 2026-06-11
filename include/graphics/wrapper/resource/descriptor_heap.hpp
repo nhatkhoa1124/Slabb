@@ -45,12 +45,12 @@ namespace slabb::graphics::wrapper::descriptor
 		D3D12_CPU_DESCRIPTOR_HANDLE get_dsv_heap_start();
 		D3D12_GPU_DESCRIPTOR_HANDLE get_resource_heap_start();
 
-		[[nodiscard]] inline ID3D12DescriptorHeap* rtv_heap() const { return m_rtv_heap.Get(); }
-		[[nodiscard]] inline ID3D12DescriptorHeap* dsv_heap() const { return m_dsv_heap.Get(); }
-		[[nodiscard]] inline ID3D12DescriptorHeap* resource_heap() const { return m_resource_heap.Get(); }
-		[[nodiscard]] inline UINT rtv_heap_size() const { return m_rtv_descriptor_size; }
-		[[nodiscard]] inline UINT dsv_heap_size() const { return m_dsv_descriptor_size; }
-		[[nodiscard]] inline UINT resource_heap_size() const { return m_resource_descriptor_size; }
+		[[nodiscard]] ID3D12DescriptorHeap* rtv_heap() const { return m_rtv_heap.Get(); }
+		[[nodiscard]] ID3D12DescriptorHeap* dsv_heap() const { return m_dsv_heap.Get(); }
+		[[nodiscard]] ID3D12DescriptorHeap* resource_heap() const { return m_resource_heap.Get(); }
+		[[nodiscard]] UINT rtv_heap_size() const { return m_rtv_descriptor_size; }
+		[[nodiscard]] UINT dsv_heap_size() const { return m_dsv_descriptor_size; }
+		[[nodiscard]] UINT resource_heap_size() const { return m_resource_descriptor_size; }
 	private:
 		ComPtr<ID3D12DescriptorHeap> m_rtv_heap;
 		ComPtr<ID3D12DescriptorHeap> m_dsv_heap;

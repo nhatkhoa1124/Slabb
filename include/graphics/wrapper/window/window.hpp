@@ -24,10 +24,10 @@ namespace slabb::graphics::wrapper::window
 		void capture_cursor();
 		void cleanup();
 
-		[[nodiscard]] inline GLFWwindow* window() const { return m_window; }
-		[[nodiscard]] inline std::string title() const { return m_title; }
-		[[nodiscard]] inline int width() const { return m_width; }
-		[[nodiscard]] inline int height() const { return m_height; }
+		[[nodiscard]] GLFWwindow* window() const { return m_window; }
+		[[nodiscard]] std::string title() const { return m_title; }
+		[[nodiscard]] int width() const { return m_width; }
+		[[nodiscard]] int height() const { return m_height; }
 		[[nodiscard]] HWND get_native_handle() const;
 	private:
 		GLFWwindow* m_window;

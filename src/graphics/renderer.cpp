@@ -46,7 +46,7 @@ namespace slabb::graphics
 	{
 		if (m_cmd_queue && !m_fences.empty())
 		{
-			m_fences[0]->wait_for_fence(m_cmd_queue->command_queue());
+			m_fences[0]->flush(m_cmd_queue->command_queue());
 		}
 	}
 
@@ -113,13 +113,13 @@ namespace slabb::graphics
 	void Renderer::render_frame()
 	{
 		UINT current_frame = m_swapchain->current_backbuffer();
-		m_fences[current_frame]->wait_for_fence(m_cmd_queue->command_queue());
+		m_fences[current_frame]->flush(m_cmd_queue->command_queue());
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_descriptor_heap->get_rtv_heap_start(), current_frame,
 			m_descriptor_heap->rtv_heap_size());
 
 		m_cmd_list->record_command(m_cmd_allocators[current_frame]->allocator(), m_swapchain->render_target(current_frame),
 								   m_graphics_pipeline->root_signature(), &rtv_handle, 
-								   &m_render_graph->render_resource().viewport, &m_render_graph->render_resource().rect,
+								   &m_render_graph->render_pass().viewport, &m_render_graph->render_pass().rect,
 								   m_graphics_pipeline->pipeline_state_object(), nullptr);
 
 		ID3D12CommandList* pp_cmd_list[] = { m_cmd_list->command_list() };

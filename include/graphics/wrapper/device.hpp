@@ -17,7 +17,7 @@ namespace slabb::graphics::wrapper
 		*/
 		void create_device(IDXGIAdapter* adapter);
 
-		[[nodiscard]] inline ID3D12Device* device() const { return m_device.Get(); }
+		[[nodiscard]] ID3D12Device* device() const { return m_device.Get(); }
 	private:
 		ComPtr<ID3D12Device> m_device;
 	};

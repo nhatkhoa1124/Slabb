@@ -19,7 +19,7 @@ namespace slabb::graphics::wrapper::command
 		void create_allocator(ID3D12Device* device, const D3D12_COMMAND_LIST_TYPE cmd_list_type);
 		void reset();
 
-		[[nodiscard]] inline ID3D12CommandAllocator* allocator() const { return m_cmd_allocator.Get(); }
+		[[nodiscard]] ID3D12CommandAllocator* allocator() const { return m_cmd_allocator.Get(); }
 
 	private:
 		ComPtr<ID3D12CommandAllocator> m_cmd_allocator;

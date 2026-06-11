@@ -30,7 +30,7 @@ namespace slabb::graphics::wrapper::synchronization
 		spdlog::info("Fence event created successfully");
 	}
 
-	void Fence::wait_for_fence(ID3D12CommandQueue* cmd_queue)
+	void Fence::flush(ID3D12CommandQueue* cmd_queue)
 	{
 		m_fence_value++;
 		cmd_queue->Signal(m_fence.Get(), m_fence_value);

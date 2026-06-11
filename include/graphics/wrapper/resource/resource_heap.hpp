@@ -20,9 +20,9 @@ namespace slabb::graphics::wrapper::resource
 		void create_heap(ID3D12Device* device, const size_t buffer_size);
 		void upload_data(std::span<const std::byte> data);
 
-		[[nodiscard]] inline ID3D12Resource* resource_heap() const { return m_buffer.Get(); }
-		[[nodiscard]] inline size_t allocated_size() const { return m_allocated_size; }
-		[[nodiscard]] inline D3D12_HEAP_TYPE heap_type() const { return m_heap_type; }
+		[[nodiscard]] ID3D12Resource* resource_heap() const { return m_buffer.Get(); }
+		[[nodiscard]] size_t allocated_size() const { return m_allocated_size; }
+		[[nodiscard]] D3D12_HEAP_TYPE heap_type() const { return m_heap_type; }
 	private:
 		ComPtr<ID3D12Resource> m_buffer;
 		D3D12_HEAP_TYPE m_heap_type;

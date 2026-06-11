@@ -61,6 +61,9 @@ namespace slabb::graphics
 		Renderer(UINT window_width, UINT window_height);
 		~Renderer();
 
+		Renderer(const Renderer&) = delete;
+		Renderer& operator=(const Renderer&) = delete;
+
 		/**
 		* @brief This method initialize core structures in the renderer
 		* @param param The native window handler
@@ -75,6 +78,7 @@ namespace slabb::graphics
 							std::vector <core::VertexAttribute> vertex_attributes);
 		void load_assets();
 		void render_frame();
+
 	private:
 		std::unique_ptr<RenderGraph> m_render_graph;
 		std::unique_ptr<Instance> m_instance;

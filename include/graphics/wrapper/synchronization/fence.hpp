@@ -11,11 +11,11 @@ namespace slabb::graphics::wrapper::synchronization
 	public:
 		Fence();
 		void create_fence(ID3D12Device* device);
-		void wait_for_fence(ID3D12CommandQueue* cmd_queue);
+		void flush(ID3D12CommandQueue* cmd_queue);
 
-		[[nodiscard]] inline ID3D12Fence* fence() const { return m_fence.Get(); }
-		[[nodiscard]] inline UINT fence_value() const { return m_fence_value; }
-		[[nodiscard]] inline void* fence_event() const { return m_fence_event; }
+		[[nodiscard]] ID3D12Fence* fence() const { return m_fence.Get(); }
+		[[nodiscard]] UINT fence_value() const { return m_fence_value; }
+		[[nodiscard]] void* fence_event() const { return m_fence_event; }
 	private:
 		void create_fence_event();
 	private:
