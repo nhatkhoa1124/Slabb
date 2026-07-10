@@ -39,7 +39,7 @@ namespace slabb::graphics::wrapper::command
 		m_cmd_list->ClearRenderTargetView(rtv_handle, color, 0, nullptr);
 	}
 
-	void CommandList::clear_depth_stencil(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv_handle, float depth = 1.0f, UINT stencil = 0) const
+	void CommandList::clear_depth_stencil(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv_handle, float depth, UINT stencil) const
 	{
 		NULL_CHECK(m_cmd_list);
 		m_cmd_list->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depth, stencil, 0, nullptr);

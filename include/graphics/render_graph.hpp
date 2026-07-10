@@ -128,6 +128,12 @@ namespace slabb::graphics
 	class SLABB_EXPORT RenderGraph {
 	public:
 		RenderGraph();
+		~RenderGraph() = default;
+
+		RenderGraph(const RenderGraph&) = delete;
+		RenderGraph& operator=(const RenderGraph&) = delete;
+		RenderGraph(RenderGraph&&) noexcept = default;
+		RenderGraph& operator=(RenderGraph&&) noexcept = default;
 
 		/**
 		* @brief Adds a new render pass to the graph
@@ -142,7 +148,8 @@ namespace slabb::graphics
 		{
 			auto resource = std::make_unique<ResourceType>(std::forward<Args>(args)...);
 			auto* raw_ptr = resource.get();
-			m_resources.push_back(std::move(resource));
+			std::unique_ptr<RenderResource> base_resource = std::move(resource);
+			m_resources.push_back(std::move(base_resource));
 			return raw_ptr;
 		}
 

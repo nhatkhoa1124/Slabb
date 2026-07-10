@@ -259,6 +259,5 @@ namespace slabb::graphics
 	{
 		m_execution_queue.clear();
 		m_render_passes.clear();
-		m_resources.clear();
 	}
 }
