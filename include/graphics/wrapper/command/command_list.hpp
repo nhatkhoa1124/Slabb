@@ -21,6 +21,7 @@ namespace slabb::graphics::wrapper::command
 		void clear_render_target(const D3D12_CPU_DESCRIPTOR_HANDLE& rtv_handle, const float color[4]) const;
 		void clear_depth_stencil(const D3D12_CPU_DESCRIPTOR_HANDLE& dsv_handle, float depth = 1.0f, UINT stencil = 0) const;
 
+		void set_vertex_buffers(UINT start_slot, UINT num_views, const D3D12_VERTEX_BUFFER_VIEW* views) const;
 		void set_root_signature(ID3D12RootSignature* root_signature) const;
 		void set_viewport(UINT num_viewports, const D3D12_VIEWPORT* viewports) const;
 		void set_scissor_rect(UINT num_rects, const D3D12_RECT* rects) const;

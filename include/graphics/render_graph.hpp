@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <DirectXMath.h>
 
 #include "wrapper/instance.hpp"
 #include "wrapper/command/command_list.hpp"
@@ -54,12 +55,13 @@ namespace slabb::graphics
 		/**
 		* @brief Copy data to CPU's staging buffer to prepare for GPU uploading
 		*/
-		template <typename T>
-		void stage_data(const T* data, std::size_t element_count)
+		void stage_data(const void* data, std::size_t total_bytes)
 		{
-			// Deep copy to avoid lifetime issues
+			if (!data || total_bytes == 0) return;
 			const auto* bytes = reinterpret_cast<const std::byte*>(data);
-			m_data.assign(bytes, bytes + sizeof(T) * element_count);
+
+			// Wipe the vector and safely copy the exact size needed
+			m_data.assign(bytes, bytes + total_bytes);
 		}
 
 		void set_native_resource(ID3D12Resource* resource) override {}
@@ -76,6 +78,7 @@ namespace slabb::graphics
 		[[nodiscard]] BufferUsage usage() const { return m_usage; }
 		[[nodiscard]] const D3D12_VERTEX_BUFFER_VIEW& vertex_view() const { return m_vertex_view; }
 		[[nodiscard]] const D3D12_INDEX_BUFFER_VIEW& index_view() const { return m_index_view; }
+		[[nodiscard]] D3D12_HEAP_TYPE hardware_heap_type() const { return m_hardware_heap->heap_type(); }
 
 	private:
 		BufferUsage m_usage;
@@ -84,6 +87,22 @@ namespace slabb::graphics
 
 		D3D12_VERTEX_BUFFER_VIEW m_vertex_view{};
 		D3D12_INDEX_BUFFER_VIEW m_index_view{};
+	};
+
+	struct RenderMesh
+	{
+		// Graph resource tracking handles
+		BufferResource* vertex_buffer{ nullptr };
+		BufferResource* index_buffer{ nullptr }; // Ready for when you add indices!
+
+		uint32_t vertex_count{ 0 };
+		uint32_t index_count{ 0 };
+	};
+
+	struct RenderModel
+	{
+		std::vector<RenderMesh> sub_meshes;
+		DirectX::XMMATRIX transform;
 	};
 
 	/**

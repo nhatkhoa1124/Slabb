@@ -6,6 +6,28 @@
 
 namespace slabb::graphics
 {
+	/**
+	* @brief Interface for core-graphics Mesh
+	*/
+	struct GraphicsMesh
+	{
+		const void* vertex_data;
+		size_t vertex_count;
+		size_t vertex_stride;
+
+		const uint32_t* index_data;
+		size_t index_count;
+	};
+
+	/**
+	* @brief Interface for core-graphics Model
+	*/
+	struct GraphicsModel
+	{
+		std::vector<GraphicsMesh> meshes;
+		DirectX::XMMATRIX transform;
+	};
+
 	class SLABB_EXPORT GraphicsVertex
 	{
 	public:

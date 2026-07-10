@@ -10,6 +10,9 @@ namespace slabb::graphics
 {
 	class TextureResource;
 	class RenderGraph;
+
+	struct GraphicsModel; // Interface model
+	struct RenderModel;   // GPU model
 }
 
 namespace slabb::graphics::wrapper
@@ -79,12 +82,13 @@ namespace slabb::graphics
 		*/
 		bool init_default_pipeline(const std::string& vertex_path, const std::string& pixel_path,
 							std::vector <core::VertexAttribute> vertex_attributes);
-		void load_assets();
+		void load_model(const GraphicsModel& model);
 		void render_frame();
 
 	private:
 		std::unique_ptr<RenderGraph> m_render_graph;
 		std::vector<TextureResource*> m_graph_backbuffers;
+		std::vector<RenderModel> m_scene_models{};
 
 		std::unique_ptr<Instance> m_instance;
 		std::unique_ptr<Device> m_device;

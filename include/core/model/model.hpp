@@ -2,7 +2,6 @@
 #include "common/common.hpp"
 #include <vector>
 #include <cstdint>
-#include <DirectXMath.h>
 
 class Vertex;
 
@@ -22,6 +21,5 @@ namespace slabb::core::model
 	struct Model
 	{
 		std::vector<Mesh> meshes;
-		DirectX::XMMATRIX transform;
 	};
 }

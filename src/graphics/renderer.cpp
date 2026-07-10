@@ -1,5 +1,6 @@
 #include "graphics/renderer.hpp"
 #include <directx/d3dx12.h>
+#include <spdlog/spdlog.h>
 
 #include "graphics/render_graph.hpp"
 #include "graphics/wrapper/instance.hpp"
@@ -115,6 +116,34 @@ namespace slabb::graphics
 		return true;
 	}
 
+	void Renderer::load_model(const GraphicsModel& model)
+	{
+		spdlog::info("Loading model...");
+		RenderModel render_model;
+		render_model.transform = model.transform;
+		for (const auto& mesh : model.meshes)
+		{
+			RenderMesh gpu_mesh;
+			gpu_mesh.vertex_count = static_cast<uint32_t>(mesh.vertex_count);
+			gpu_mesh.index_count = static_cast<uint32_t>(mesh.index_count);
+
+			gpu_mesh.vertex_buffer = m_render_graph->create_resource<BufferResource>("VertexBuffer", BufferUsage::VERTEX);
+			gpu_mesh.vertex_buffer->stage_data(mesh.vertex_data, mesh.vertex_count * mesh.vertex_stride);
+			gpu_mesh.vertex_buffer->initialize_hardware(m_device->device(), static_cast<UINT>(mesh.vertex_stride));
+
+			if (mesh.index_count != 0)
+			{
+				gpu_mesh.index_buffer = m_render_graph->create_resource<BufferResource>("IndexBuffer", BufferUsage::INDEX);
+				gpu_mesh.index_buffer->stage_data(mesh.index_data, mesh.index_count * sizeof(uint32_t));
+				gpu_mesh.index_buffer->initialize_hardware(m_device->device(), sizeof(uint32_t), DXGI_FORMAT_R32_UINT);
+			}
+
+			render_model.sub_meshes.push_back(gpu_mesh);
+		}
+		m_scene_models.push_back(render_model);
+		spdlog::info("Model loaded successfully");
+	}
+
 	void Renderer::render_frame()
 	{
 		// Pre-draw setups
@@ -141,6 +170,14 @@ namespace slabb::graphics
 		TextureResource* current_backbuffer = m_graph_backbuffers[current_frame];
 		auto& main_pass = m_render_graph->add_pass("Main");
 		main_pass.writes_to(current_backbuffer);
+		for (const auto& model : m_scene_models)
+		{
+			for (const auto& mesh : model.sub_meshes)
+			{
+				if (mesh.vertex_buffer) main_pass.reads_from(mesh.vertex_buffer);
+				if (mesh.index_buffer)  main_pass.reads_from(mesh.index_buffer);
+			}
+		}
 		main_pass.set_viewport(viewport);
 		main_pass.set_rect(scissor_rect);
 		main_pass.set_root_signature(m_global_root_signature->root_signature());
@@ -153,10 +190,30 @@ namespace slabb::graphics
 					m_descriptor_heap->rtv_heap_size()
 				);
 				cmd.set_render_target(1, &rtv_handle, nullptr);
-				const float clear_color[] = { 0.1f, 0.2f, 0.3f, 1.0f };
-				cmd.clear_render_target(rtv_handle, clear_color);
-				cmd.set_pipline_state(m_graphics_pipeline->pipeline_state_object());
-				cmd.draw_instanced(3, 1, 0, 0);
+				for (const auto& model : m_scene_models)
+				{
+					// TODO: Bind the model.transform matrix to a Constant Buffer slot here later!
+
+					for (const auto& mesh : model.sub_meshes)
+					{
+						// Bind the specific vertex stream layout
+						cmd.set_vertex_buffers(0, 1, &mesh.vertex_buffer->vertex_view());
+
+						if (mesh.index_buffer)
+						{
+							// If indexed, bind the index buffer and issue an indexed draw call
+							cmd.command_list()->IASetIndexBuffer(&mesh.index_buffer->index_view());
+							cmd.command_list()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+							cmd.command_list()->DrawIndexedInstanced(mesh.index_count, 1, 0, 0, 0);
+						}
+						else
+						{
+							// Fallback standard instanced streaming
+							cmd.command_list()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+							cmd.draw_instanced(mesh.vertex_count, 1, 0, 0);
+						}
+					}
+				}
 			});
 
 		// Compile and execute

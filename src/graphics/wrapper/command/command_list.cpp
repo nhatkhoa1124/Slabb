@@ -45,6 +45,12 @@ namespace slabb::graphics::wrapper::command
 		m_cmd_list->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depth, stencil, 0, nullptr);
 	}
 
+	void CommandList::set_vertex_buffers(UINT start_slot, UINT num_views, const D3D12_VERTEX_BUFFER_VIEW* views) const
+	{
+		NULL_CHECK(m_cmd_list);
+		m_cmd_list->IASetVertexBuffers(start_slot, num_views, views);
+	}
+
 	void CommandList::set_root_signature(ID3D12RootSignature* root_signature) const
 	{
 		NULL_CHECK(m_cmd_list);

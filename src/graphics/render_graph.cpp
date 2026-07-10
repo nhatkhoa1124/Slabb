@@ -133,6 +133,14 @@ namespace slabb::graphics
 
 		for (auto& resource : m_resources)
 		{
+			if (auto* buffer = dynamic_cast<BufferResource*>(resource.get()))
+			{
+				if (buffer->hardware_heap_type() == D3D12_HEAP_TYPE_UPLOAD)
+				{
+					resource->set_state(D3D12_RESOURCE_STATE_GENERIC_READ);
+					continue;
+				}
+			}
 			resource->set_state(D3D12_RESOURCE_STATE_COMMON);
 		}
 
@@ -169,8 +177,26 @@ namespace slabb::graphics
 
 	D3D12_RESOURCE_STATES RenderGraph::evalute_state(const RenderResource* resource, bool is_writer)
 	{
-		const auto* texture = dynamic_cast<const TextureResource*>(resource);
+		if (const auto* buffer = dynamic_cast<const BufferResource*>(resource))
+		{
+			// 1. If it's an UPLOAD heap buffer, keep the permanent restriction rule:
+			if (buffer->hardware_heap_type() == D3D12_HEAP_TYPE_UPLOAD)
+			{
+				return D3D12_RESOURCE_STATE_GENERIC_READ;
+			}
 
+			// 2. If it's a DEFAULT heap buffer, return the exact, precise state it needs!
+			if (buffer->usage() == BufferUsage::VERTEX)
+			{
+				return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+			}
+			else if (buffer->usage() == BufferUsage::INDEX)
+			{
+				return D3D12_RESOURCE_STATE_INDEX_BUFFER;
+			}
+		}
+
+		const auto* texture = dynamic_cast<const TextureResource*>(resource);
 		if(is_writer)
 		{
 			if (texture && texture->usage() == TextureUsage::DEPTH_STENCIL_BUFFER)
