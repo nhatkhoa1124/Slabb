@@ -57,7 +57,7 @@ namespace slabb::graphics::wrapper::resource
 			spdlog::info("Data copied successfully");
 			break;
 		case D3D12_HEAP_TYPE_DEFAULT:
-			spdlog::info("Copying data to DEFAULT heap...");
+			spdlog::info("DEFAULT type not supported for now");
 			break;
 		default:
 			spdlog::warn("Data copy failed: Invalid heap type");

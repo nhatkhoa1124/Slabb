@@ -7,6 +7,34 @@
 
 namespace slabb::graphics
 {
+	// Buffer Resource
+	void BufferResource::initialize_hardware(ID3D12Device* device, UINT stride_in_bytes, DXGI_FORMAT index_format)
+	{
+		if (m_data.empty()) return;
+		UINT buffer_size = m_data.size();
+
+		// TODO: Using UPLOAD type for testing now, refactor for other uses
+		m_hardware_heap = std::make_unique<wrapper::resource::BufferHeap>(wrapper::resource::HeapType::UPLOAD);
+		m_hardware_heap->create_heap(device, buffer_size);
+
+		m_hardware_heap->upload_data(std::span<const std::byte>(m_data));
+
+		ID3D12Resource* native_res = m_hardware_heap->resource_heap();
+
+		if (m_usage == BufferUsage::VERTEX)
+		{
+			m_vertex_view.BufferLocation = native_res->GetGPUVirtualAddress();
+			m_vertex_view.StrideInBytes = stride_in_bytes;
+			m_vertex_view.SizeInBytes = buffer_size;
+		}
+		else if (m_usage == BufferUsage::INDEX)
+		{
+			m_index_view.BufferLocation = native_res->GetGPUVirtualAddress();
+			m_index_view.SizeInBytes = buffer_size;
+			m_index_view.Format = index_format;
+		}
+	}
+
 	//Render Pass
 	void RenderPass::writes_to(const RenderResource* resource)
 	{

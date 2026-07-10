@@ -8,6 +8,7 @@
 
 #include "wrapper/instance.hpp"
 #include "wrapper/command/command_list.hpp"
+#include "wrapper/resource/resource_heap.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -32,40 +33,57 @@ namespace slabb::graphics
 		[[nodiscard]] virtual ID3D12Resource* underlying_resource() const = 0;
 	private:
 		const std::string m_name;
-		D3D12_RESOURCE_STATES m_current_state;
+		D3D12_RESOURCE_STATES m_current_state{D3D12_RESOURCE_STATE_COMMON};
 	};
 
-	/**
-	* @brief D3D12 hardware-specific data for buffer resource (Vertex buffer only for now)
-	*/
-	struct BufferHardware
+	enum class BufferUsage
 	{
-		ComPtr<ID3D12Resource> resource{ nullptr };
-		D3D12_VERTEX_BUFFER_VIEW view{};
+		VERTEX,
+		INDEX
 	};
 
-	// TODO: Add Index Buffer support
 	/**
 	* @brief Buffer class handles CPU side buffer works
 	*/
 	class SLABB_EXPORT BufferResource : public RenderResource
 	{
 	public:
-		explicit BufferResource(std::string name) : RenderResource{std::move(name)} {};
+		explicit BufferResource(std::string name, BufferUsage buffer_usage = BufferUsage::VERTEX) :
+			RenderResource{ std::move(name) }, m_usage{ buffer_usage } {};
 
+		/**
+		* @brief Copy data to CPU's staging buffer to prepare for GPU uploading
+		*/
 		template <typename T>
-		void upload_data(const T* data, std::size_t element_count)
+		void stage_data(const T* data, std::size_t element_count)
 		{
 			// Deep copy to avoid lifetime issues
 			const auto* bytes = reinterpret_cast<const std::byte*>(data);
 			m_data.assign(bytes, bytes + sizeof(T) * element_count);
 		}
 
-		[[nodiscard]] const BufferHardware& hardware() const { return m_hardware; }
+		void set_native_resource(ID3D12Resource* resource) override {}
+
+		/**
+		* @brief Initialize hardwares for BufferResource
+		* @param device Pointer to DX12 device
+		* @param stride_in_bytes Size between each elements in the data array
+		* @param index_format Format for index buffer, leave unspecified for vertex buffers
+		*/
+		void initialize_hardware(ID3D12Device* device, UINT stride_in_bytes, DXGI_FORMAT index_format = DXGI_FORMAT_UNKNOWN);
+
+		[[nodiscard]] ID3D12Resource* underlying_resource() const override { return m_hardware_heap ? m_hardware_heap->resource_heap() : nullptr; }
+		[[nodiscard]] BufferUsage usage() const { return m_usage; }
+		[[nodiscard]] const D3D12_VERTEX_BUFFER_VIEW& vertex_view() const { return m_vertex_view; }
+		[[nodiscard]] const D3D12_INDEX_BUFFER_VIEW& index_view() const { return m_index_view; }
 
 	private:
+		BufferUsage m_usage;
 		std::vector<std::byte> m_data{};
-		BufferHardware m_hardware{};
+		std::unique_ptr<wrapper::resource::BufferHeap> m_hardware_heap{ nullptr };
+
+		D3D12_VERTEX_BUFFER_VIEW m_vertex_view{};
+		D3D12_INDEX_BUFFER_VIEW m_index_view{};
 	};
 
 	/**
