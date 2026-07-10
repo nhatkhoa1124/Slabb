@@ -69,7 +69,7 @@ Slabb/
 
 ## Architecture
 
-The engine is split into two cooperating layers plus a sandbox app:
+The engine is split into two cooperating layers, plus a sandbox app:
 
 ### Core (`slabb::core`)
 Engine-level state and orchestration. Independent of any graphics API:
