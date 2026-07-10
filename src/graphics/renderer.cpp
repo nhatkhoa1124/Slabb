@@ -22,7 +22,7 @@ namespace slabb::graphics
 {
 	Renderer::Renderer(UINT window_width, UINT window_height)
 	{
-		m_render_graph = std::make_unique<RenderGraph>(window_width, window_height);
+		m_render_graph = std::make_unique<RenderGraph>();
 		m_instance = std::make_unique<Instance>();
 		m_device = std::make_unique<Device>();
 		m_swapchain = std::make_unique<Swapchain>(window_width, window_height, DXGI_FORMAT_R8G8B8A8_UNORM);
@@ -112,15 +112,6 @@ namespace slabb::graphics
 
 	void Renderer::render_frame()
 	{
-		UINT current_frame = m_swapchain->current_backbuffer();
-		m_fences[current_frame]->flush(m_cmd_queue->command_queue());
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_descriptor_heap->get_rtv_heap_start(), current_frame,
-			m_descriptor_heap->rtv_heap_size());
-
-		
-		ID3D12CommandList* pp_cmd_list[] = { m_cmd_list->command_list() };
-		m_cmd_queue->execute_command_list(1, pp_cmd_list);
-		m_swapchain->present(1, 0);
 
 	}
 

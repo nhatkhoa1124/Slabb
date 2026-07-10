@@ -41,23 +41,8 @@ namespace slabb::graphics
 	}
 
 	// Render Graph
-	RenderGraph::RenderGraph(int width, int height) : m_render_pass{"demo"}
+	RenderGraph::RenderGraph()
 	{
-		D3D12_VIEWPORT viewport = {};
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
-		viewport.Width = static_cast<float>(width);
-		viewport.Height = static_cast<float>(height);
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		m_render_pass.set_viewport(viewport);
-
-		D3D12_RECT scissor_rect = {};
-		scissor_rect.left = 0;
-		scissor_rect.top = 0;
-		scissor_rect.right = static_cast<LONG>(width);
-		scissor_rect.bottom = static_cast<LONG>(height);
-		m_render_pass.set_rect(scissor_rect);
 	}
 
 	size_t RenderGraph::find_producer(const RenderResource* resource)
@@ -86,7 +71,7 @@ namespace slabb::graphics
 		{
 			auto& pass = m_render_passes[i];
 			const auto& reads = pass->read_resources();
-			const auto& it = std::find(reads.begin(), 
+			const auto& it = std::find(reads.begin(),
 								reads.end(), 
 								resource);
 			if (it != pass->read_resources().end())

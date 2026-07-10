@@ -120,7 +120,7 @@ namespace slabb::graphics
 
 	class SLABB_EXPORT RenderGraph {
 	public:
-		RenderGraph(int width, int height);
+		RenderGraph();
 
 		/**
 		* @brief Adds a new render pass to the graph
@@ -142,10 +142,6 @@ namespace slabb::graphics
 		void compile();
 		void render(wrapper::command::CommandList& cmd_list);
 		void clear();
-
-		// TODO: Temporary method, remove this later
-		[[nodiscard]] const RenderPass& render_pass() const { return m_render_pass; }
-
 	private:
 
 		/**
@@ -171,9 +167,6 @@ namespace slabb::graphics
 		D3D12_RESOURCE_STATES evalute_state(const RenderResource* resource, bool is_writer);
 
 	private:
-		// TODO: Temporary member, remove this later
-		RenderPass m_render_pass; 
-
 		std::vector<std::unique_ptr<RenderResource>> m_resources;
 		std::vector<std::unique_ptr<RenderPass>> m_render_passes;
 		std::vector<size_t> m_execution_queue;
