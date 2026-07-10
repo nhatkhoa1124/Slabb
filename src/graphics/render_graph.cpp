@@ -34,6 +34,15 @@ namespace slabb::graphics
 				m_barriers.data());
 		}
 
+		if (m_viewport.Width > 0.0f && m_viewport.Height > 0.0f)
+		{
+			cmd_list.set_viewport(1, &m_viewport);
+		}
+		if (m_rect.right > 0 && m_rect.bottom > 0)
+		{
+			cmd_list.set_scissor_rect(1, &m_rect);
+		}
+
 		if (m_callback)
 		{
 			m_callback(cmd_list);
@@ -84,6 +93,8 @@ namespace slabb::graphics
 
 	void RenderGraph::build_resource_barriers()
 	{
+		spdlog::debug("Start building resource barriers...");
+
 		for (auto& resource : m_resources)
 		{
 			resource->set_state(D3D12_RESOURCE_STATE_COMMON);
@@ -117,6 +128,7 @@ namespace slabb::graphics
 			for (const auto* write : pass->write_resources()) { process_resource(write, true); }
 			for (const auto* read : pass->read_resources()) { process_resource(read, false); }
 		}
+		spdlog::debug("Resource barriers built succesfully");
 	}
 
 	D3D12_RESOURCE_STATES RenderGraph::evalute_state(const RenderResource* resource, bool is_writer)
@@ -231,6 +243,7 @@ namespace slabb::graphics
 		
 		m_execution_queue = std::move(holder);
 		std::reverse(m_execution_queue.begin(), m_execution_queue.end());
+		build_resource_barriers();
 		spdlog::debug("Render graph compiled successfully");
 	}
 

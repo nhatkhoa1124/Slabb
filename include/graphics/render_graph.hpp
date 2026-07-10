@@ -22,6 +22,11 @@ namespace slabb::graphics
 		virtual ~RenderResource() = default;
 		void set_state(D3D12_RESOURCE_STATES resource_state) { m_current_state = resource_state; }
 
+		/**
+		* @brief Set underlying D3D12 resource
+		*/
+		virtual void set_native_resource(ID3D12Resource* resource) = 0;
+
 		[[nodiscard]] const std::string& name() const { return m_name; }
 		[[nodiscard]] D3D12_RESOURCE_STATES current_state() const { return m_current_state; }
 		[[nodiscard]] virtual ID3D12Resource* underlying_resource() const = 0;
@@ -76,7 +81,9 @@ namespace slabb::graphics
 	class SLABB_EXPORT TextureResource : public RenderResource
 	{
 	public:
-		explicit TextureResource(std::string name) : RenderResource{std::move(name)} {};
+		explicit TextureResource(std::string name, TextureUsage usage = TextureUsage::COMMON)
+			: RenderResource{ std::move(name) }, m_usage{ usage } {};
+		void set_native_resource(ID3D12Resource* resource) override { m_resource = resource; }
 
 		[[nodiscard]] TextureUsage usage() const { return m_usage; }
 		[[nodiscard]] ID3D12Resource* underlying_resource() const override { return m_resource.Get(); }

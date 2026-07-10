@@ -8,6 +8,7 @@
 
 namespace slabb::graphics
 {
+	class TextureResource;
 	class RenderGraph;
 }
 
@@ -81,6 +82,8 @@ namespace slabb::graphics
 
 	private:
 		std::unique_ptr<RenderGraph> m_render_graph;
+		std::vector<TextureResource*> m_graph_backbuffers;
+
 		std::unique_ptr<Instance> m_instance;
 		std::unique_ptr<Device> m_device;
 		std::unique_ptr<Swapchain> m_swapchain;
