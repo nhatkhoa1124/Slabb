@@ -103,8 +103,11 @@ namespace slabb::graphics
 		void reads_from(const RenderResource* resource);
 		void record(std::function<void(wrapper::command::CommandList&)> callback);
 		void execute(wrapper::command::CommandList& cmd_list);
+
 		void set_viewport(const D3D12_VIEWPORT& viewport) { m_viewport = viewport; }
 		void set_rect(const D3D12_RECT& rect) { m_rect = rect; }
+		void set_pipeline_state(ID3D12PipelineState* pso) { m_pso = pso; }
+		void set_root_signature(ID3D12RootSignature* root_signature) { m_root_signature = root_signature; }
 		void add_resource_barrier(const D3D12_RESOURCE_BARRIER& barrier) { m_barriers.push_back(barrier); }
 		void clear_barriers() { m_barriers.clear(); }
 
@@ -123,6 +126,8 @@ namespace slabb::graphics
 		std::function<void(wrapper::command::CommandList&)> m_callback;
 		D3D12_VIEWPORT m_viewport{};
 		D3D12_RECT m_rect{};
+		ID3D12PipelineState* m_pso{ nullptr };
+		ID3D12RootSignature* m_root_signature{ nullptr };
 	};
 
 	class SLABB_EXPORT RenderGraph {

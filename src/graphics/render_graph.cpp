@@ -42,6 +42,14 @@ namespace slabb::graphics
 		{
 			cmd_list.set_scissor_rect(1, &m_rect);
 		}
+		if (m_root_signature)
+		{
+			cmd_list.command_list()->SetGraphicsRootSignature(m_root_signature);
+		}
+		if (m_pso)
+		{
+			cmd_list.set_pipline_state(m_pso);
+		}
 
 		if (m_callback)
 		{

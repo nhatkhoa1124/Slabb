@@ -20,14 +20,10 @@ namespace slabb::graphics::wrapper::pipeline
 		void load_shaders(const std::string& vertex_path, const std::string& pixel_path);
 
 		[[nodiscard]] ID3D12PipelineState* pipeline_state_object() const { return m_pso.Get(); }
-		[[nodiscard]] ID3D12RootSignature* root_signature() const { return m_root_signature.Get(); }
-	private:
-
 	private:
 		ComPtr<ID3D12PipelineState> m_pso;
 		ComPtr<ID3DBlob> m_vertex_shader;
 		ComPtr<ID3DBlob> m_pixel_shader;
-		ComPtr<ID3D12RootSignature> m_root_signature;
 	};
 
 	/**

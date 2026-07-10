@@ -17,6 +17,7 @@ namespace slabb::graphics::wrapper
 	class Device;
 	class Instance;
 	class Swapchain;
+	class RootSignature;
 }
 
 namespace slabb::graphics::wrapper::command
@@ -46,6 +47,7 @@ using Microsoft::WRL::ComPtr;
 using slabb::graphics::wrapper::Device;
 using slabb::graphics::wrapper::Instance;
 using slabb::graphics::wrapper::Swapchain;
+using slabb::graphics::wrapper::RootSignature;
 using slabb::graphics::wrapper::command::CommandAllocator;
 using slabb::graphics::wrapper::command::CommandList;
 using slabb::graphics::wrapper::command::CommandQueue;
@@ -93,6 +95,7 @@ namespace slabb::graphics
 		std::unique_ptr<DescriptorHeap> m_descriptor_heap;
 		std::unique_ptr<GraphicsPipeline> m_graphics_pipeline;
 		std::vector<std::unique_ptr<Fence>> m_fences;
+		std::unique_ptr<RootSignature> m_global_root_signature;
 	};
 }
 

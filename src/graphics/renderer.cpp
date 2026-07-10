@@ -40,6 +40,7 @@ namespace slabb::graphics
 		}
 		m_descriptor_heap = std::make_unique<DescriptorHeap>();
 		m_graphics_pipeline = std::make_unique<GraphicsPipeline>();
+		m_global_root_signature = std::make_unique<RootSignature>();
 	}
 
 	Renderer::~Renderer()
@@ -99,12 +100,11 @@ namespace slabb::graphics
 		assert(!vertex_path.empty());
 		assert(!pixel_path.empty());
 		// Create root signature & graphics pipeline
-		std::unique_ptr<RootSignature> default_signature = std::make_unique<RootSignature>();
-		default_signature->serialize_root_signature();
-		default_signature->create_root_signature(m_device->device());
+		m_global_root_signature->serialize_root_signature();
+		m_global_root_signature->create_root_signature(m_device->device());
 		m_graphics_pipeline->load_shaders(vertex_path, pixel_path);
 		const auto& input_elements = GraphicsVertex::get_vertex_input_layout(vertex_attributes);
-		m_graphics_pipeline->create_graphics_pipeline(m_device->device(), default_signature->root_signature(),
+		m_graphics_pipeline->create_graphics_pipeline(m_device->device(), m_global_root_signature->root_signature(),
 													  input_elements);
 		// Create command list
 		// Hard-coded to use the first allocator here!!!
@@ -131,20 +131,20 @@ namespace slabb::graphics
 		viewport.Height = height;
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
-
 		D3D12_RECT scissor_rect = {};
 		scissor_rect.left = 0;
 		scissor_rect.top = 0;
 		scissor_rect.right = static_cast<LONG>(width);
 		scissor_rect.bottom = static_cast<LONG>(height);
 
-		TextureResource* current_backbuffer = m_graph_backbuffers[current_frame]; // Get current backbuffer resource
+		// Main pass
+		TextureResource* current_backbuffer = m_graph_backbuffers[current_frame];
 		auto& main_pass = m_render_graph->add_pass("Main");
 		main_pass.writes_to(current_backbuffer);
 		main_pass.set_viewport(viewport);
 		main_pass.set_rect(scissor_rect);
-
-		// Record draw logic
+		main_pass.set_root_signature(m_global_root_signature->root_signature());
+		main_pass.set_pipeline_state(m_graphics_pipeline->pipeline_state_object());
 		main_pass.record([this, current_frame](CommandList cmd)
 			{
 				CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(
@@ -159,6 +159,7 @@ namespace slabb::graphics
 				cmd.draw_instanced(3, 1, 0, 0);
 			});
 
+		// Compile and execute
 		m_render_graph->compile();
 
 		auto& allocator = m_cmd_allocators[current_frame];

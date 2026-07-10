@@ -20,8 +20,6 @@ namespace slabb::graphics::wrapper::pipeline
 		assert(m_vertex_shader != nullptr);
 		assert(m_pixel_shader != nullptr);
 
-		m_root_signature = root_signature;
-
 		spdlog::info("Creating graphics pipeline...");
 
 		D3D12_SHADER_BYTECODE vs_bytecode = {};
