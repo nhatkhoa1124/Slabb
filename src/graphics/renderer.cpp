@@ -117,15 +117,11 @@ namespace slabb::graphics
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_descriptor_heap->get_rtv_heap_start(), current_frame,
 			m_descriptor_heap->rtv_heap_size());
 
-		m_cmd_list->record_command(m_cmd_allocators[current_frame]->allocator(), m_swapchain->render_target(current_frame),
-								   m_graphics_pipeline->root_signature(), &rtv_handle, 
-								   &m_render_graph->render_pass().viewport, &m_render_graph->render_pass().rect,
-								   m_graphics_pipeline->pipeline_state_object(), nullptr);
-
+		
 		ID3D12CommandList* pp_cmd_list[] = { m_cmd_list->command_list() };
 		m_cmd_queue->execute_command_list(1, pp_cmd_list);
 		m_swapchain->present(1, 0);
-		
+
 	}
 
 }

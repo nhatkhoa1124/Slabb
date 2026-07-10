@@ -1,6 +1,7 @@
 #include "graphics/render_graph.hpp"
 #include <unordered_map>
 #include <algorithm>
+#include <directx/d3dx12.h>
 
 #include "graphics/tools/debug.hpp"
 
@@ -24,6 +25,21 @@ namespace slabb::graphics
 		m_callback = callback;
 	}
 
+	void RenderPass::execute(wrapper::command::CommandList& cmd_list)
+	{
+		if (!m_barriers.empty())
+		{
+			cmd_list.command_list()->ResourceBarrier(
+				static_cast<UINT>(m_barriers.size()),
+				m_barriers.data());
+		}
+
+		if (m_callback)
+		{
+			m_callback(cmd_list);
+		}
+	}
+
 	// Render Graph
 	RenderGraph::RenderGraph(int width, int height) : m_render_pass{"demo"}
 	{
@@ -34,14 +50,14 @@ namespace slabb::graphics
 		viewport.Height = static_cast<float>(height);
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
-		m_render_pass.viewport = viewport;
+		m_render_pass.set_viewport(viewport);
 
 		D3D12_RECT scissor_rect = {};
 		scissor_rect.left = 0;
 		scissor_rect.top = 0;
 		scissor_rect.right = static_cast<LONG>(width);
 		scissor_rect.bottom = static_cast<LONG>(height);
-		m_render_pass.rect = scissor_rect;
+		m_render_pass.set_rect(scissor_rect);
 	}
 
 	size_t RenderGraph::find_producer(const RenderResource* resource)
@@ -81,6 +97,66 @@ namespace slabb::graphics
 		return indices;
 	}
 
+	void RenderGraph::build_resource_barriers()
+	{
+		for (auto& resource : m_resources)
+		{
+			resource->set_state(D3D12_RESOURCE_STATE_COMMON);
+		}
+
+		for (size_t pass_idx : m_execution_queue)
+		{
+			auto& pass = m_render_passes[pass_idx];
+			pass->clear_barriers();
+
+			auto process_resource = [&](const RenderResource* res, bool is_writer)
+				{
+					// Get physical resource
+					ID3D12Resource* native_res = res->underlying_resource();
+					if (!native_res) return;
+
+					D3D12_RESOURCE_STATES current = res->current_state();
+					D3D12_RESOURCE_STATES required = evalute_state(res, is_writer);
+
+					// If current state is not the required state
+					if (current != required)
+					{
+						pass->add_resource_barrier(CD3DX12_RESOURCE_BARRIER::Transition(
+							native_res,
+							current,
+							required));
+						// Remember the updated state
+						const_cast<RenderResource*>(res)->set_state(required);
+					}
+				};
+			for (const auto* write : pass->write_resources()) { process_resource(write, true); }
+			for (const auto* read : pass->read_resources()) { process_resource(read, false); }
+		}
+	}
+
+	D3D12_RESOURCE_STATES RenderGraph::evalute_state(const RenderResource* resource, bool is_writer)
+	{
+		const auto* texture = dynamic_cast<const TextureResource*>(resource);
+
+		if(is_writer)
+		{
+			if (texture && texture->usage() == TextureUsage::DEPTH_STENCIL_BUFFER)
+			{
+				return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+			}
+			return texture ? D3D12_RESOURCE_STATE_RENDER_TARGET : D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		}
+		else
+		{
+			if (texture && texture->usage() == TextureUsage::DEPTH_STENCIL_BUFFER)
+			{
+				return D3D12_RESOURCE_STATE_DEPTH_READ;
+			}
+			return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+		}
+
+	}
+
 	RenderPass& RenderGraph::add_pass(std::string name)
 	{
 		auto pass = std::make_unique<RenderPass>(std::move(name));
@@ -110,6 +186,7 @@ namespace slabb::graphics
 			if (idx_producer == SLABB_INVALID_SIZE_T)
 			{
 				spdlog::debug("Resource {} is an imported root input (No producer pass).", resource->name());
+				continue;
 			}
 			if (consumer_list.empty())
 			{
@@ -129,7 +206,7 @@ namespace slabb::graphics
 		std::vector<NodeState> visit_states(m_render_passes.size(), NodeState::UNVISITED);
 		// For holding the reversed order of the true execution queue, since we traverse from bottom up
 		std::vector<size_t> holder;
-		holder.resize(m_render_passes.size());
+		holder.reserve(m_render_passes.size());
 
 		auto dfs = [&](auto& self, size_t pass_idx)
 			{
@@ -170,5 +247,20 @@ namespace slabb::graphics
 		m_execution_queue = std::move(holder);
 		std::reverse(m_execution_queue.begin(), m_execution_queue.end());
 		spdlog::debug("Render graph compiled successfully");
+	}
+
+	void RenderGraph::render(wrapper::command::CommandList& cmd_list)
+	{
+		for (size_t pass_idx : m_execution_queue)
+		{
+			m_render_passes[pass_idx]->execute(cmd_list);
+		}
+	}
+
+	void RenderGraph::clear()
+	{
+		m_execution_queue.clear();
+		m_render_passes.clear();
+		m_resources.clear();
 	}
 }
