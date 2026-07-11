@@ -23,6 +23,7 @@ namespace slabb::graphics::wrapper::command
 
 		void set_vertex_buffers(UINT start_slot, UINT num_views, const D3D12_VERTEX_BUFFER_VIEW* views) const;
 		void set_root_signature(ID3D12RootSignature* root_signature) const;
+		void set_graphics_root_cbv(UINT root_parameter_index, D3D12_GPU_VIRTUAL_ADDRESS buffer_address) const;
 		void set_viewport(UINT num_viewports, const D3D12_VIEWPORT* viewports) const;
 		void set_scissor_rect(UINT num_rects, const D3D12_RECT* rects) const;
 		void set_resource_barrier(UINT num_barriers, const D3D12_RESOURCE_BARRIER* barrier) const;

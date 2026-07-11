@@ -40,7 +40,8 @@ namespace slabb::graphics
 	enum class BufferUsage
 	{
 		VERTEX,
-		INDEX
+		INDEX,
+		CONSTANT
 	};
 
 	/**
@@ -78,6 +79,7 @@ namespace slabb::graphics
 		[[nodiscard]] BufferUsage usage() const { return m_usage; }
 		[[nodiscard]] const D3D12_VERTEX_BUFFER_VIEW& vertex_view() const { return m_vertex_view; }
 		[[nodiscard]] const D3D12_INDEX_BUFFER_VIEW& index_view() const { return m_index_view; }
+		[[nodiscard]] const D3D12_CONSTANT_BUFFER_VIEW_DESC& constant_view() const { return m_constant_view; }
 		[[nodiscard]] D3D12_HEAP_TYPE hardware_heap_type() const { return m_hardware_heap->heap_type(); }
 
 	private:
@@ -87,18 +89,25 @@ namespace slabb::graphics
 
 		D3D12_VERTEX_BUFFER_VIEW m_vertex_view{};
 		D3D12_INDEX_BUFFER_VIEW m_index_view{};
+		D3D12_CONSTANT_BUFFER_VIEW_DESC m_constant_view{};
 	};
 
+	/**
+	* @brief Graphics-side mesh structure
+	*/
 	struct RenderMesh
 	{
 		// Graph resource tracking handles
 		BufferResource* vertex_buffer{ nullptr };
-		BufferResource* index_buffer{ nullptr }; // Ready for when you add indices!
+		BufferResource* index_buffer{ nullptr };
 
 		uint32_t vertex_count{ 0 };
 		uint32_t index_count{ 0 };
 	};
 
+	/**
+	* @brief Graphics-side model structure
+	*/
 	struct RenderModel
 	{
 		std::vector<RenderMesh> sub_meshes;
@@ -138,6 +147,7 @@ namespace slabb::graphics
 
 		void writes_to(const RenderResource* resource);
 		void reads_from(const RenderResource* resource);
+		void clear_write_targets();
 		void record(std::function<void(wrapper::command::CommandList&)> callback);
 		void execute(wrapper::command::CommandList& cmd_list);
 
@@ -148,6 +158,7 @@ namespace slabb::graphics
 		void add_resource_barrier(const D3D12_RESOURCE_BARRIER& barrier) { m_barriers.push_back(barrier); }
 		void clear_barriers() { m_barriers.clear(); }
 
+		[[nodiscard]] const std::string name() const { return m_name; }
 		[[nodiscard]] const std::vector<const RenderResource*>& write_resources() const { return m_writes; }
 		[[nodiscard]] const std::vector<const RenderResource*>& read_resources() const { return m_reads; }
 		[[nodiscard]] const D3D12_VIEWPORT& viewport() const { return m_viewport; }
@@ -181,6 +192,8 @@ namespace slabb::graphics
 		* @brief Adds a new render pass to the graph
 		*/
 		RenderPass& add_pass(std::string name);
+		
+		RenderPass* const get_pass(std::string name) const;
 
 		/**
 		* @brief Creates a new resource for the passes to consumes
@@ -194,6 +207,29 @@ namespace slabb::graphics
 			m_resources.push_back(std::move(base_resource));
 			return raw_ptr;
 		}
+
+		/**
+		 * @brief Safely fetches a tracked resource container by its registration name.
+		 * @tparam T The specific resource type (e.g., BufferResource, TextureResource).
+		 */
+		template <typename T>
+		[[nodiscard]] T* get_resource(const std::string& name) const
+		{
+			for (const auto& res : m_resources)
+			{
+				if (res->name() == name)
+				{
+					// Safely cast the base RenderResource pointer to the requested derived type
+					return dynamic_cast<T*>(res.get());
+				}
+			}
+			return nullptr;
+		}
+
+		/**
+		* @brief Handles resource barrier transitions
+		*/
+		void build_resource_barriers();
 
 		void compile();
 		void render(wrapper::command::CommandList& cmd_list);
@@ -209,11 +245,6 @@ namespace slabb::graphics
 		* @brief Returns a list of resources to be read by a render pass
 		*/
 		std::vector<size_t> find_consumers(const RenderResource* resource);
-
-		/**
-		* @brief Handles resource barrier transitions
-		*/
-		void build_resource_barriers();
 
 		/**
 		* @brief Determine the valid state for barrier transitioning

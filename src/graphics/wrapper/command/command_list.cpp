@@ -58,6 +58,12 @@ namespace slabb::graphics::wrapper::command
 		m_cmd_list->SetGraphicsRootSignature(root_signature);
 	}
 
+	void CommandList::set_graphics_root_cbv(UINT root_parameter_index, D3D12_GPU_VIRTUAL_ADDRESS buffer_address) const
+	{
+		NULL_CHECK(m_cmd_list);
+		m_cmd_list->SetGraphicsRootConstantBufferView(root_parameter_index, buffer_address);
+	}
+
 	void CommandList::set_viewport(UINT num_viewports, const D3D12_VIEWPORT* viewport) const
 	{
 		NULL_CHECK(m_cmd_list);

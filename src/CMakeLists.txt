@@ -20,7 +20,8 @@ set(SLABB_SOURCE_FILES
 	core/systems/config_system.cpp
 	core/model/model.cpp
 	graphics/wrapper/resource/resource_heap.cpp 
-	graphics/wrapper/synchronization/fence.cpp)
+	graphics/wrapper/synchronization/fence.cpp 
+	graphics/graphics_interface/graphics_shader.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
 

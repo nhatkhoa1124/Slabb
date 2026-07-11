@@ -1,6 +1,5 @@
 #include "core/systems/render_system.hpp"
 #include <spdlog/spdlog.h>
-#include <DirectXMath.h>
 
 #include "graphics/graphics_interface/graphics_vertex.hpp"
 

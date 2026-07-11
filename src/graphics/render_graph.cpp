@@ -13,6 +13,10 @@ namespace slabb::graphics
 		if (m_data.empty()) return;
 		UINT buffer_size = m_data.size();
 
+		// Calculate the 256-byte aligned size required by the driver
+		UINT raw_size = static_cast<UINT>(m_data.size());
+		UINT aligned_size = (raw_size + 255) & ~255;
+
 		// TODO: Using UPLOAD type for testing now, refactor for other uses
 		m_hardware_heap = std::make_unique<wrapper::resource::BufferHeap>(wrapper::resource::HeapType::UPLOAD);
 		m_hardware_heap->create_heap(device, buffer_size);
@@ -33,6 +37,11 @@ namespace slabb::graphics
 			m_index_view.SizeInBytes = buffer_size;
 			m_index_view.Format = index_format;
 		}
+		else if (m_usage == BufferUsage::CONSTANT)
+		{
+			m_constant_view.BufferLocation = native_res->GetGPUVirtualAddress();
+			m_constant_view.SizeInBytes = aligned_size;
+		}
 	}
 
 	//Render Pass
@@ -46,6 +55,11 @@ namespace slabb::graphics
 	{
 		NULL_CHECK(resource);
 		m_reads.push_back(resource);
+	}
+
+	void RenderPass::clear_write_targets()
+	{
+		m_writes.clear();
 	}
 
 	void RenderPass::record(std::function<void(wrapper::command::CommandList&)> callback)
@@ -222,6 +236,17 @@ namespace slabb::graphics
 		RenderPass& ref = *pass;
 		m_render_passes.push_back(std::move(pass));
 		return ref;
+	}
+
+	RenderPass* const RenderGraph::get_pass(std::string name) const
+	{
+		for (const auto& pass : m_render_passes)
+		{
+			if (name == pass->name())
+			{
+				return pass.get();
+			}
+		}
 	}
 
 	// Enum for node visiting

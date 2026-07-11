@@ -14,6 +14,7 @@
 #include "graphics/wrapper/root_signature.hpp"
 #include "graphics/wrapper/synchronization/fence.hpp"
 #include "graphics/graphics_interface/graphics_vertex.hpp"
+#include "graphics/graphics_interface/graphics_shader.hpp"
 
 using namespace slabb::graphics;
 using namespace slabb::graphics::wrapper;
@@ -92,6 +93,16 @@ namespace slabb::graphics
 				TextureUsage::BACK_BUFFER);
 			m_graph_backbuffers[i]->set_native_resource(backbuffer);
 		}
+		// Constant buffer creation
+		m_render_graph->create_resource<BufferResource>("CameraCB", BufferUsage::CONSTANT);
+		if (auto* cb = m_render_graph->get_resource<BufferResource>("CameraCB"))
+		{
+			TransformCB transform_data{};
+			transform_data.mvp_matrix = DirectX::XMMatrixIdentity();
+			cb->stage_data(&transform_data, sizeof(TransformCB));
+			cb->initialize_hardware(m_device->device(), 0);
+		}
+
 		return true;
 	}
 
@@ -112,6 +123,56 @@ namespace slabb::graphics
 		m_cmd_list->create_command_list(m_device->device(), m_cmd_queue->command_list_type(),
 										m_cmd_allocators[0]->allocator(), nullptr);
 		m_cmd_list->close();
+		// Compile render graph
+		auto& main_pass = m_render_graph->add_pass("Main");
+
+		main_pass.set_root_signature(m_global_root_signature->root_signature());
+		main_pass.set_pipeline_state(m_graphics_pipeline->pipeline_state_object());
+
+		auto* camera_cb = m_render_graph->get_resource<BufferResource>("CameraCB");
+		if (camera_cb)
+		{
+			main_pass.reads_from(camera_cb);
+		}
+
+		main_pass.record([this](CommandList& cmd)
+			{
+				UINT current_frame = m_swapchain->current_backbuffer();
+
+				CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(
+					m_descriptor_heap->get_rtv_heap_start(),
+					current_frame,
+					m_descriptor_heap->rtv_heap_size()
+				);
+				cmd.set_render_target(1, &rtv_handle, nullptr);
+
+				auto* active_cb = m_render_graph->get_resource<BufferResource>("CameraCB");
+				if (active_cb)
+				{
+					cmd.set_graphics_root_cbv(0, active_cb->constant_view().BufferLocation);
+				}
+
+				for (const auto& model : m_scene_models)
+				{
+					for (const auto& mesh : model.sub_meshes)
+					{
+						cmd.set_vertex_buffers(0, 1, &mesh.vertex_buffer->vertex_view());
+
+						if (mesh.index_buffer)
+						{
+							cmd.command_list()->IASetIndexBuffer(&mesh.index_buffer->index_view());
+							cmd.command_list()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+							cmd.command_list()->DrawIndexedInstanced(mesh.index_count, 1, 0, 0, 0);
+						}
+						else
+						{
+							cmd.command_list()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+							cmd.draw_instanced(mesh.vertex_count, 1, 0, 0);
+						}
+					}
+				}
+			});
+		m_render_graph->compile();
 
 		return true;
 	}
@@ -121,6 +182,7 @@ namespace slabb::graphics
 		spdlog::info("Loading model...");
 		RenderModel render_model;
 		render_model.transform = model.transform;
+		const auto& main_pass = m_render_graph->get_pass("Main");
 		for (const auto& mesh : model.meshes)
 		{
 			RenderMesh gpu_mesh;
@@ -137,92 +199,46 @@ namespace slabb::graphics
 				gpu_mesh.index_buffer->stage_data(mesh.index_data, mesh.index_count * sizeof(uint32_t));
 				gpu_mesh.index_buffer->initialize_hardware(m_device->device(), sizeof(uint32_t), DXGI_FORMAT_R32_UINT);
 			}
-
+			// Setup main pass read resources
+			if (gpu_mesh.vertex_buffer) main_pass->reads_from(gpu_mesh.vertex_buffer);
+			if (gpu_mesh.index_buffer)  main_pass->reads_from(gpu_mesh.index_buffer);
 			render_model.sub_meshes.push_back(gpu_mesh);
 		}
+
 		m_scene_models.push_back(render_model);
 		spdlog::info("Model loaded successfully");
 	}
 
 	void Renderer::render_frame()
 	{
-		// Pre-draw setups
 		UINT current_frame = m_swapchain->current_backbuffer();
 		m_fences[current_frame]->flush(m_cmd_queue->command_queue());
-		m_render_graph->clear();
+
+		TextureResource* current_backbuffer = m_graph_backbuffers[current_frame];
+		const auto& main_pass = m_render_graph->get_pass("Main");
+
+		main_pass->clear_write_targets();
+		main_pass->writes_to(current_backbuffer);
 
 		float width = static_cast<float>(m_swapchain->width());
 		float height = static_cast<float>(m_swapchain->height());
-		D3D12_VIEWPORT viewport = {};
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
-		viewport.Width = width;
-		viewport.Height = height;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		D3D12_RECT scissor_rect = {};
-		scissor_rect.left = 0;
-		scissor_rect.top = 0;
-		scissor_rect.right = static_cast<LONG>(width);
-		scissor_rect.bottom = static_cast<LONG>(height);
 
-		// Main pass
-		TextureResource* current_backbuffer = m_graph_backbuffers[current_frame];
-		auto& main_pass = m_render_graph->add_pass("Main");
-		main_pass.writes_to(current_backbuffer);
-		for (const auto& model : m_scene_models)
-		{
-			for (const auto& mesh : model.sub_meshes)
-			{
-				if (mesh.vertex_buffer) main_pass.reads_from(mesh.vertex_buffer);
-				if (mesh.index_buffer)  main_pass.reads_from(mesh.index_buffer);
-			}
-		}
-		main_pass.set_viewport(viewport);
-		main_pass.set_rect(scissor_rect);
-		main_pass.set_root_signature(m_global_root_signature->root_signature());
-		main_pass.set_pipeline_state(m_graphics_pipeline->pipeline_state_object());
-		main_pass.record([this, current_frame](CommandList cmd)
-			{
-				CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(
-					m_descriptor_heap->get_rtv_heap_start(),
-					current_frame,
-					m_descriptor_heap->rtv_heap_size()
-				);
-				cmd.set_render_target(1, &rtv_handle, nullptr);
-				for (const auto& model : m_scene_models)
-				{
-					// TODO: Bind the model.transform matrix to a Constant Buffer slot here later!
+		D3D12_VIEWPORT viewport = { 0.0f, 0.0f, width, height, 0.0f, 1.0f };
+		D3D12_RECT scissor_rect = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
 
-					for (const auto& mesh : model.sub_meshes)
-					{
-						// Bind the specific vertex stream layout
-						cmd.set_vertex_buffers(0, 1, &mesh.vertex_buffer->vertex_view());
+		main_pass->set_viewport(viewport);
+		main_pass->set_rect(scissor_rect);
 
-						if (mesh.index_buffer)
-						{
-							// If indexed, bind the index buffer and issue an indexed draw call
-							cmd.command_list()->IASetIndexBuffer(&mesh.index_buffer->index_view());
-							cmd.command_list()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-							cmd.command_list()->DrawIndexedInstanced(mesh.index_count, 1, 0, 0, 0);
-						}
-						else
-						{
-							// Fallback standard instanced streaming
-							cmd.command_list()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-							cmd.draw_instanced(mesh.vertex_count, 1, 0, 0);
-						}
-					}
-				}
-			});
+		// Dynamically compute layout transitions 
+		m_render_graph->build_resource_barriers();
 
-		// Compile and execute
-		m_render_graph->compile();
-
+		// Record commands
 		auto& allocator = m_cmd_allocators[current_frame];
 		allocator->reset();
 		m_cmd_list->reset(allocator->allocator(), nullptr);
+
 		m_render_graph->render(*m_cmd_list);
+
 		CD3DX12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			current_backbuffer->underlying_resource(),
 			current_backbuffer->current_state(),
