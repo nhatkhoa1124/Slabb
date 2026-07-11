@@ -1,6 +1,7 @@
 #include "graphics/renderer.hpp"
 #include <directx/d3dx12.h>
 #include <spdlog/spdlog.h>
+#include <DirectXMath.h>
 
 #include "graphics/render_graph.hpp"
 #include "graphics/wrapper/instance.hpp"
@@ -79,8 +80,9 @@ namespace slabb::graphics
 		m_descriptor_heap->create_heap(DescriptorHeapType::RENDER_TARGET, m_device->device(), 2);
 		m_descriptor_heap->create_heap(DescriptorHeapType::DEPTH, m_device->device(), 3);
 		m_descriptor_heap->create_heap(DescriptorHeapType::RESOURCE, m_device->device(), 1024);
-		// Render target view & graph backbuffers creation
+		// Render target view declaration
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_descriptor_heap->get_rtv_heap_start());
+		// Backbuffer creation
 		m_graph_backbuffers.resize(m_swapchain->buffer_count());
 		for (UINT i = 0; i < m_swapchain->buffer_count(); i++)
 		{
@@ -92,16 +94,19 @@ namespace slabb::graphics
 				"BackBuffer_" + std::to_string(i),
 				TextureUsage::BACK_BUFFER);
 			m_graph_backbuffers[i]->set_native_resource(backbuffer);
+			// Constant buffer creation
+			std::string cb_name = "CameraCB_" + std::to_string(i);
+			m_render_graph->create_resource<BufferResource>(cb_name, BufferUsage::CONSTANT);
+			if (auto* cb = m_render_graph->get_resource<BufferResource>(cb_name))
+			{
+				TransformCB transform_data{};
+				transform_data.mvp_matrix = DirectX::XMMatrixIdentity();
+				cb->stage_data(&transform_data, sizeof(TransformCB));
+				cb->initialize_hardware(m_device->device(), 0);
+			}
 		}
-		// Constant buffer creation
-		m_render_graph->create_resource<BufferResource>("CameraCB", BufferUsage::CONSTANT);
-		if (auto* cb = m_render_graph->get_resource<BufferResource>("CameraCB"))
-		{
-			TransformCB transform_data{};
-			transform_data.mvp_matrix = DirectX::XMMatrixIdentity();
-			cb->stage_data(&transform_data, sizeof(TransformCB));
-			cb->initialize_hardware(m_device->device(), 0);
-		}
+
+
 
 		return true;
 	}
@@ -145,8 +150,11 @@ namespace slabb::graphics
 					m_descriptor_heap->rtv_heap_size()
 				);
 				cmd.set_render_target(1, &rtv_handle, nullptr);
+				const float clear_color[] = { 0.05f, 0.05f, 0.05f, 1.0f };
+				cmd.command_list()->ClearRenderTargetView(rtv_handle, clear_color, 0, nullptr);
 
-				auto* active_cb = m_render_graph->get_resource<BufferResource>("CameraCB");
+				std::string cb_name = "CameraCB_" + std::to_string(current_frame);
+				auto* active_cb = m_render_graph->get_resource<BufferResource>(cb_name);
 				if (active_cb)
 				{
 					cmd.set_graphics_root_cbv(0, active_cb->constant_view().BufferLocation);
@@ -213,6 +221,31 @@ namespace slabb::graphics
 	{
 		UINT current_frame = m_swapchain->current_backbuffer();
 		m_fences[current_frame]->flush(m_cmd_queue->command_queue());
+
+		// Hard-coding rotation logic here!!!
+		static float rotation_angle = 0.0f;
+		rotation_angle += 0.02f;
+
+		DirectX::XMMATRIX model = DirectX::XMMatrixRotationZ(rotation_angle);
+
+		// 2. For modern 3D movement, you would multiply this by your View and Projection matrices:
+		// DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(...);
+		// DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(...);
+		// DirectX::XMMATRIX mvp  = model * view * proj;
+
+		// 3. Transpose the matrix so HLSL reads it column-major properly
+		TransformCB updated_payload;
+		updated_payload.mvp_matrix = DirectX::XMMatrixTranspose(model);
+
+		// 4. Safely overwrite the buffer designated exclusively for this frame index
+		std::string cb_name = "CameraCB_" + std::to_string(current_frame);
+		if (auto* active_cb = m_render_graph->get_resource<BufferResource>(cb_name))
+		{
+			active_cb->stage_data(&updated_payload, sizeof(TransformCB));
+
+			// Because upload memory maps instantly, update the pointer mapping block:
+			active_cb->hardware_heap()->upload_data(active_cb->raw_data());
+		}
 
 		TextureResource* current_backbuffer = m_graph_backbuffers[current_frame];
 		const auto& main_pass = m_render_graph->get_pass("Main");

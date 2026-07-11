@@ -30,13 +30,22 @@ namespace slabb::graphics::wrapper
 
 	bool RootSignature::serialize_root_signature()
 	{
+		CD3DX12_ROOT_PARAMETER root_params[1] = {};
+		root_params[0].InitAsConstantBufferView(0, 0);
+		D3D12_ROOT_SIGNATURE_FLAGS root_sig_flags =
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+
 		CD3DX12_ROOT_SIGNATURE_DESC desc;
 		desc.Init(
+			_countof(root_params),
+			root_params,
 			0,
 			nullptr,
-			0,
-			nullptr,
-			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+			root_sig_flags
 		);
 
 		ComPtr<ID3DBlob> error_blob;

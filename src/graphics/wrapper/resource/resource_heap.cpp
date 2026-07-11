@@ -48,16 +48,16 @@ namespace slabb::graphics::wrapper::resource
 		switch (m_heap_type)
 		{
 		case D3D12_HEAP_TYPE_UPLOAD:
-			spdlog::info("Copying data to UPLOAD heap...");
+			spdlog::debug("Copying data to UPLOAD heap...");
 			UINT8* p_vertex_data_begin;
 			CD3DX12_RANGE read_range(0, 0);
 			SLABB_CHECK(m_buffer->Map(0, &read_range, reinterpret_cast<void**>(&p_vertex_data_begin)));
 			std::memcpy(p_vertex_data_begin, data.data(), data.size_bytes());
 			m_buffer->Unmap(0, nullptr);
-			spdlog::info("Data copied successfully");
+			spdlog::debug("Data copied successfully");
 			break;
 		case D3D12_HEAP_TYPE_DEFAULT:
-			spdlog::info("DEFAULT type not supported for now");
+			spdlog::debug("DEFAULT type not supported for now");
 			break;
 		default:
 			spdlog::warn("Data copy failed: Invalid heap type");

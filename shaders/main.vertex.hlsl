@@ -1,3 +1,8 @@
+cbuffer TransformCB : register(b0)
+{
+    matrix mvp_matrix;
+}
+
 struct VSInput
 {
     float3 position : POSITION;
@@ -13,7 +18,7 @@ struct VSOut
 VSOut VSMain(VSInput input)
 {
     VSOut output;
-    output.position = float4(input.position, 1.0f);
+    output.position = mul(float4(input.position, 1.0f), mvp_matrix);
     output.color = input.color;
     return output;
 }

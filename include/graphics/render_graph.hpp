@@ -81,6 +81,8 @@ namespace slabb::graphics
 		[[nodiscard]] const D3D12_INDEX_BUFFER_VIEW& index_view() const { return m_index_view; }
 		[[nodiscard]] const D3D12_CONSTANT_BUFFER_VIEW_DESC& constant_view() const { return m_constant_view; }
 		[[nodiscard]] D3D12_HEAP_TYPE hardware_heap_type() const { return m_hardware_heap->heap_type(); }
+		[[nodiscard]] wrapper::resource::BufferHeap* hardware_heap() const { return m_hardware_heap.get(); }
+		[[nodiscard]] std::span<const std::byte> raw_data() const { return m_data; }
 
 	private:
 		BufferUsage m_usage;
@@ -199,7 +201,7 @@ namespace slabb::graphics
 		* @brief Creates a new resource for the passes to consumes
 		*/
 		template <typename ResourceType, typename... Args>
-		[[nodiscard]] ResourceType* create_resource(Args&&... args)
+		ResourceType* create_resource(Args&&... args)
 		{
 			auto resource = std::make_unique<ResourceType>(std::forward<Args>(args)...);
 			auto* raw_ptr = resource.get();
