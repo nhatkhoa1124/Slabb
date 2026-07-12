@@ -49,9 +49,8 @@ namespace slabb::core
 			0, 2, 3  // Second Triangle
 		};
 
-		slabb::core::model::Model square_model;
-		square_model.meshes.push_back(square_mesh);
-		m_render_system->load_model(square_model, *m_active_scene);
+		slabb::core::model::Model bike_model = slabb::core::model::ModelLoader::load_gltf("assets/models/bike.glb");
+		m_render_system->load_model(bike_model, *m_active_scene);
 
 		spdlog::info("Application subsystems initialized successfully");
 		return true;

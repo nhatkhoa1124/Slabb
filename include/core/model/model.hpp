@@ -2,6 +2,7 @@
 #include "common/common.hpp"
 #include <vector>
 #include <cstdint>
+#include <string>
 
 class Vertex;
 
@@ -12,14 +13,15 @@ namespace slabb::core::model
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 	};
-	
-	struct Material
-	{
-
-	};
 
 	struct Model
 	{
 		std::vector<Mesh> meshes;
+	};
+
+	class SLABB_EXPORT ModelLoader
+	{
+	public:
+		[[nodiscard]] static Model load_gltf(const std::string& file_path);
 	};
 }
