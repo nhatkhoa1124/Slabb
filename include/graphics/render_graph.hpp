@@ -1,6 +1,7 @@
 #pragma once
 #include "common/common_graphics.hpp"
 #include <directx/d3d12.h>
+#include <directx/d3dx12.h>
 #include <string>
 #include <vector>
 #include <functional>
@@ -150,8 +151,8 @@ namespace slabb::graphics
 		void writes_to(const RenderResource* resource);
 		void reads_from(const RenderResource* resource);
 		void clear_write_targets();
-		void record(std::function<void(wrapper::command::CommandList&)> callback);
-		void execute(wrapper::command::CommandList& cmd_list);
+		void record(std::function<void(wrapper::command::CommandList&, UINT)> callback);
+		void execute(wrapper::command::CommandList& cmd_list, UINT current_frame_index);
 
 		void set_viewport(const D3D12_VIEWPORT& viewport) { m_viewport = viewport; }
 		void set_rect(const D3D12_RECT& rect) { m_rect = rect; }
@@ -165,6 +166,21 @@ namespace slabb::graphics
 		[[nodiscard]] const std::vector<const RenderResource*>& read_resources() const { return m_reads; }
 		[[nodiscard]] const D3D12_VIEWPORT& viewport() const { return m_viewport; }
 		[[nodiscard]] const D3D12_RECT& rect() const { return m_rect; }
+		[[nodiscard]] bool is_backbuffer_pass() const
+		{
+			for (const auto* res : m_writes)
+			{
+				const TextureResource* texture_res = dynamic_cast<const TextureResource*>(res);
+				if (texture_res)
+				{
+					if (texture_res->usage() == TextureUsage::BACK_BUFFER)
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 
 	private:
 		const std::string m_name;
@@ -173,7 +189,7 @@ namespace slabb::graphics
 		std::vector<const RenderResource*> m_reads;
 		std::vector<D3D12_RESOURCE_BARRIER> m_barriers;
 
-		std::function<void(wrapper::command::CommandList&)> m_callback;
+		std::function<void(wrapper::command::CommandList&, UINT)> m_callback;
 		D3D12_VIEWPORT m_viewport{};
 		D3D12_RECT m_rect{};
 		ID3D12PipelineState* m_pso{ nullptr };
@@ -234,7 +250,8 @@ namespace slabb::graphics
 		void build_resource_barriers();
 
 		void compile();
-		void render(wrapper::command::CommandList& cmd_list);
+		void render(wrapper::command::CommandList& cmd_list, UINT frame_index,
+					CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle);
 		void clear();
 	private:
 

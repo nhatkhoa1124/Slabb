@@ -21,7 +21,7 @@ namespace slabb::core::systems
 		std::vector<VertexAttribute> vertexAttributes = core::Vertex::vertex_attribute();
 		const std::string& default_vs = config.renderer_config().vertex_files[0];
 		const std::string& default_ps = config.renderer_config().pixel_files[0];
-		m_renderer->init_default_pipeline(default_vs, default_ps, vertexAttributes);
+		m_renderer->init_pipeline(default_vs, default_ps, vertexAttributes);
 		spdlog::info("Config system initialized successfully");
 		return true;
 	}

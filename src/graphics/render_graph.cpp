@@ -1,7 +1,6 @@
 #include "graphics/render_graph.hpp"
 #include <unordered_map>
 #include <algorithm>
-#include <directx/d3dx12.h>
 
 #include "graphics/tools/debug.hpp"
 
@@ -62,12 +61,12 @@ namespace slabb::graphics
 		m_writes.clear();
 	}
 
-	void RenderPass::record(std::function<void(wrapper::command::CommandList&)> callback)
+	void RenderPass::record(std::function<void(wrapper::command::CommandList&, UINT)> callback)
 	{
 		m_callback = callback;
 	}
 
-	void RenderPass::execute(wrapper::command::CommandList& cmd_list)
+	void RenderPass::execute(wrapper::command::CommandList& cmd_list, UINT current_frame_index)
 	{
 		if (!m_barriers.empty())
 		{
@@ -95,7 +94,7 @@ namespace slabb::graphics
 
 		if (m_callback)
 		{
-			m_callback(cmd_list);
+			m_callback(cmd_list, current_frame_index);
 		}
 	}
 
@@ -247,6 +246,7 @@ namespace slabb::graphics
 				return pass.get();
 			}
 		}
+		return nullptr;
 	}
 
 	// Enum for node visiting
@@ -334,11 +334,45 @@ namespace slabb::graphics
 		spdlog::debug("Render graph compiled successfully");
 	}
 
-	void RenderGraph::render(wrapper::command::CommandList& cmd_list)
+	void RenderGraph::render(wrapper::command::CommandList& cmd_list, UINT frame_index,
+							 CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle)
 	{
 		for (size_t pass_idx : m_execution_queue)
 		{
-			m_render_passes[pass_idx]->execute(cmd_list);
+			auto& pass = m_render_passes[pass_idx];
+
+			if (pass->is_backbuffer_pass())
+			{
+				cmd_list.set_render_target(1, &rtv_handle, nullptr);
+				const float default_clear_color[] = { 0.05f, 0.05f, 0.05f, 1.0f };
+				cmd_list.command_list()->ClearRenderTargetView(rtv_handle, default_clear_color, 0, nullptr);
+			}
+			// Else if this pass writes to custom RenderTextures (like a shadow map or HDR buffer)
+			else if (!pass->write_resources().empty())
+			{
+				// Inside here, you will map your custom RenderTexture CPU handles
+				// cmd_list.set_render_target(...);
+			}
+
+			pass->execute(cmd_list, frame_index);
+
+			if (pass->is_backbuffer_pass())
+			{
+				for (const auto* res : pass->write_resources())
+				{
+					const TextureResource* texture_res = dynamic_cast<const TextureResource*>(res);
+					if (texture_res && texture_res->usage() == TextureUsage::BACK_BUFFER)
+					{
+						CD3DX12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+							res->underlying_resource(),
+							D3D12_RESOURCE_STATE_RENDER_TARGET,
+							D3D12_RESOURCE_STATE_PRESENT
+						);
+						cmd_list.set_resource_barrier(1, &present_barrier);
+						const_cast<RenderResource*>(res)->set_state(D3D12_RESOURCE_STATE_PRESENT);
+					}
+				}
+			}
 		}
 	}
 
