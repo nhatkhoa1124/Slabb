@@ -26,6 +26,7 @@ namespace slabb::graphics
 		for (const auto& frame : frames)
 		{
 			main_pass.reads_from(frame.camera_constant_buffer);
+			main_pass.writes_to(frame.depth_target);
 		}
 
 		main_pass.record([&frames](wrapper::command::CommandList & cmd, UINT frame_idx, const RenderQueue& queue)

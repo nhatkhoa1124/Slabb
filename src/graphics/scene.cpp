@@ -9,7 +9,6 @@ namespace slabb::graphics
 		RenderModel render_model;
 		render_model.transform = model.transform;
 
-		const auto& main_pass = render_graph.get_pass("Main");
 		std::string model_id = std::to_string(m_models.size());
 
 		for (const auto& mesh : model.meshes)
@@ -28,9 +27,6 @@ namespace slabb::graphics
 				gpu_mesh.index_buffer->stage_data(mesh.index_data, mesh.index_count * sizeof(uint32_t));
 				gpu_mesh.index_buffer->initialize_hardware(device, sizeof(uint32_t), DXGI_FORMAT_R32_UINT);
 			}
-
-			if (gpu_mesh.vertex_buffer) main_pass->reads_from(gpu_mesh.vertex_buffer);
-			if (gpu_mesh.index_buffer)  main_pass->reads_from(gpu_mesh.index_buffer);
 
 			render_model.sub_meshes.push_back(gpu_mesh);
 		}

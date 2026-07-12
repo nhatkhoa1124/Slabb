@@ -14,7 +14,10 @@ namespace slabb::graphics
 	{
 		std::unique_ptr<wrapper::command::CommandAllocator> command_allocator;
 		std::unique_ptr<wrapper::synchronization::Fence> fence;
+
 		BufferResource* camera_constant_buffer{ nullptr };
+
 		TextureResource* backbuffer_target{ nullptr };
+		TextureResource* depth_target{ nullptr };
 	};
 }

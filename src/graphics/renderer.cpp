@@ -98,6 +98,7 @@ namespace slabb::graphics
 				TextureUsage::BACK_BUFFER);
 			frame.backbuffer_target->set_native_resource(backbuffer);
 			m_graph_backbuffers[i] = frame.backbuffer_target;
+
 			// Setup constant buffers
 			std::string cb_name = "CameraCB_" + std::to_string(i);
 			frame.camera_constant_buffer = m_render_graph->create_resource<BufferResource>(cb_name, BufferUsage::CONSTANT);
@@ -105,8 +106,14 @@ namespace slabb::graphics
 			TransformCB transform_data{ .mvp_matrix = DirectX::XMMatrixIdentity() };
 			frame.camera_constant_buffer->stage_data(&transform_data, sizeof(TransformCB));
 			frame.camera_constant_buffer->initialize_hardware(m_device->device(), 0);
-		}
 
+			// Setup depth buffers
+			std::string depth_name = "DepthBuffer_" + std::to_string(i);
+			frame.depth_target = m_render_graph->create_resource<TextureResource>(
+				depth_name,
+				TextureUsage::DEPTH_STENCIL_BUFFER
+			);
+		}
 		return true;
 	}
 
