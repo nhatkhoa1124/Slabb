@@ -9,7 +9,10 @@
 
 using slabb::graphics::Renderer;
 
-class Model;
+namespace slabb::graphics
+{
+	class Scene;
+}
 
 namespace slabb::core::systems
 {
@@ -18,13 +21,11 @@ namespace slabb::core::systems
 	public:
 		RenderSystem();
 		bool init_system(const ConfigSystem& config, HWND window_handle);
-		void run();
+		void run(slabb::graphics::Scene& active_scene);
 		void cleanup();
-		void load_model(const core::model::Model& model);
+		void load_model(const core::model::Model& model, slabb::graphics::Scene& target_scene);
 
 		[[nodiscard]] inline Renderer* renderer() { return m_renderer.get(); }
-	private:
-		void draw_mesh(std::vector<Model> models);
 	private:
 		std::unique_ptr<Renderer> m_renderer;
 	};

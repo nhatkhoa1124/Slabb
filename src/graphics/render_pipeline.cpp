@@ -2,6 +2,7 @@
 #include <directx/d3dx12.h>
 
 #include "graphics/wrapper/command/command_list.hpp"
+#include "graphics/render_queue.hpp"
 
 namespace slabb::graphics
 {
@@ -27,12 +28,35 @@ namespace slabb::graphics
 			main_pass.reads_from(frame.camera_constant_buffer);
 		}
 
-		main_pass.record([&frames](wrapper::command::CommandList & cmd, UINT frame_idx)
+		main_pass.record([&frames](wrapper::command::CommandList & cmd, UINT frame_idx, const RenderQueue& queue)
 			{
 				const auto& current_frame = frames[frame_idx];
 
 				D3D12_GPU_VIRTUAL_ADDRESS cbv_address = current_frame.camera_constant_buffer->constant_view().BufferLocation;
 				cmd.set_graphics_root_cbv(0, cbv_address);
+
+				// Traverse opaque bucket
+				for (const auto& item : queue.opaque_buckets)
+				{
+					// TODO: Bind the unique per-object transform matrix to Slot 1 in the root signature
+					// e.g., cmd.set_graphics_root_cbv(1, item.constant_buffer_address);
+
+					// Bind vertex buffer layout state
+					cmd.set_vertex_buffers(0, 1, &item.vertex_buffer->vertex_view());
+
+					// Dynamic indexed fallback determination
+					if (item.index_buffer)
+					{
+						cmd.command_list()->IASetIndexBuffer(&item.index_buffer->index_view());
+						cmd.command_list()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+						cmd.command_list()->DrawIndexedInstanced(item.index_count, 1, 0, 0, 0);
+					}
+					else
+					{
+						cmd.command_list()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+						cmd.draw_instanced(item.vertex_count, 1, 0, 0);
+					}
+				}
 			});
 	}
 }

@@ -17,6 +17,7 @@
 #include "graphics/graphics_interface/graphics_vertex.hpp"
 #include "graphics/graphics_interface/graphics_shader.hpp"
 #include "graphics/render_pipeline.hpp"
+#include "graphics/scene.hpp"
 
 using namespace slabb::graphics;
 using namespace slabb::graphics::wrapper;
@@ -136,58 +137,14 @@ namespace slabb::graphics
 		return true;
 	}
 
-	void Renderer::load_model(const GraphicsModel& model)
-	{
-		spdlog::info("Loading model...");
-		RenderModel render_model;
-		render_model.transform = model.transform;
-		const auto& main_pass = m_render_graph->get_pass("Main");
-		for (const auto& mesh : model.meshes)
-		{
-			RenderMesh gpu_mesh;
-			gpu_mesh.vertex_count = static_cast<uint32_t>(mesh.vertex_count);
-			gpu_mesh.index_count = static_cast<uint32_t>(mesh.index_count);
-
-			gpu_mesh.vertex_buffer = m_render_graph->create_resource<BufferResource>("VertexBuffer", BufferUsage::VERTEX);
-			gpu_mesh.vertex_buffer->stage_data(mesh.vertex_data, mesh.vertex_count * mesh.vertex_stride);
-			gpu_mesh.vertex_buffer->initialize_hardware(m_device->device(), static_cast<UINT>(mesh.vertex_stride));
-
-			if (mesh.index_count != 0)
-			{
-				gpu_mesh.index_buffer = m_render_graph->create_resource<BufferResource>("IndexBuffer", BufferUsage::INDEX);
-				gpu_mesh.index_buffer->stage_data(mesh.index_data, mesh.index_count * sizeof(uint32_t));
-				gpu_mesh.index_buffer->initialize_hardware(m_device->device(), sizeof(uint32_t), DXGI_FORMAT_R32_UINT);
-			}
-			// Setup main pass read resources
-			if (gpu_mesh.vertex_buffer) main_pass->reads_from(gpu_mesh.vertex_buffer);
-			if (gpu_mesh.index_buffer)  main_pass->reads_from(gpu_mesh.index_buffer);
-			render_model.sub_meshes.push_back(gpu_mesh);
-		}
-
-		m_scene_models.push_back(render_model);
-		spdlog::info("Model loaded successfully");
-	}
-
-	void Renderer::update_uniform_data(const FrameContext& frame)
-	{
-		static float rotation_angle = 0.0f;
-		rotation_angle += 0.02f;
-
-		TransformCB updated_payload{
-			.mvp_matrix = DirectX::XMMatrixTranspose(DirectX::XMMatrixRotationZ(rotation_angle))
-		};
-
-		frame.camera_constant_buffer->stage_data(&updated_payload, sizeof(TransformCB));
-		frame.camera_constant_buffer->hardware_heap()->upload_data(frame.camera_constant_buffer->raw_data());
-	}
-
-	void Renderer::render_frame()
+	void Renderer::render_frame(Scene& scene)
 	{
 		UINT current_frame = m_swapchain->current_backbuffer();
 		const auto& frame = m_frames[current_frame];
 		frame.fence->flush(m_cmd_queue->command_queue());
 
-		update_uniform_data(frame);
+		scene.update_transforms(frame);
+		scene.collect_render_items();
 
 		// Configure main pass
 		const auto& main_pass = m_render_graph->get_pass("Main");
@@ -215,7 +172,7 @@ namespace slabb::graphics
 			current_frame,
 			m_descriptor_heap->rtv_heap_size()
 		);
-		m_render_graph->render(*m_cmd_list, current_frame, active_rtv);
+		m_render_graph->render(*m_cmd_list, current_frame, active_rtv, scene.render_queue());
 
 		m_cmd_list->close();
 

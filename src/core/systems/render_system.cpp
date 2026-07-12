@@ -2,6 +2,9 @@
 #include <spdlog/spdlog.h>
 
 #include "graphics/graphics_interface/graphics_vertex.hpp"
+#include "graphics/scene.hpp"
+#include "graphics/wrapper/device.hpp"
+#include "graphics/render_graph.hpp"
 
 namespace slabb::core::systems
 {
@@ -26,9 +29,10 @@ namespace slabb::core::systems
 		return true;
 	}
 
-	void RenderSystem::run()
+	void RenderSystem::run(slabb::graphics::Scene& active_scene)
 	{
-		m_renderer->render_frame();
+		active_scene.collect_render_items();
+		m_renderer->render_frame(active_scene);
 	}
 
 	void RenderSystem::cleanup()
@@ -36,7 +40,7 @@ namespace slabb::core::systems
 
 	}
 
-	void RenderSystem::load_model(const core::model::Model& model)
+	void RenderSystem::load_model(const core::model::Model& model, slabb::graphics::Scene& target_scene)
 	{
 		slabb::graphics::GraphicsModel graphics_model;
 		graphics_model.transform = DirectX::XMMatrixIdentity();
@@ -53,6 +57,6 @@ namespace slabb::core::systems
 
 			graphics_model.meshes.push_back(raw_mesh);
 		}
-		m_renderer->load_model(graphics_model);
+		target_scene.load_model(graphics_model, *m_renderer->render_graph(), m_renderer->device()->device());
 	}
 }

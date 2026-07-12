@@ -3,7 +3,7 @@
 
 #include "graphics/wrapper/command/command_allocator.hpp"
 #include "graphics/wrapper/synchronization/fence.hpp"
-#include "graphics/render_graph.hpp"
+#include "render_graph.hpp"
 
 namespace slabb::graphics
 {

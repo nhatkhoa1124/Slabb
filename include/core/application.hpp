@@ -12,6 +12,11 @@ using slabb::core::systems::ConfigSystem;
 using slabb::core::systems::RenderSystem;
 using slabb::graphics::wrapper::window::Window;
 
+namespace slabb::graphics 
+{
+	class Scene; 
+}
+
 namespace slabb::core
 {
 	class SLABB_EXPORT Application {
@@ -24,5 +29,6 @@ namespace slabb::core
 		std::unique_ptr<Window> m_window;
 		std::unique_ptr<ConfigSystem> m_config_system;
 		std::unique_ptr<RenderSystem> m_render_system;
+		std::unique_ptr<slabb::graphics::Scene> m_active_scene;
 	};
 }

@@ -61,12 +61,12 @@ namespace slabb::graphics
 		m_writes.clear();
 	}
 
-	void RenderPass::record(std::function<void(wrapper::command::CommandList&, UINT)> callback)
+	void RenderPass::record(std::function<void(wrapper::command::CommandList&, UINT, const RenderQueue&)> callback)
 	{
 		m_callback = callback;
 	}
 
-	void RenderPass::execute(wrapper::command::CommandList& cmd_list, UINT current_frame_index)
+	void RenderPass::execute(wrapper::command::CommandList& cmd_list, UINT current_frame_index, const RenderQueue& scene_queue)
 	{
 		if (!m_barriers.empty())
 		{
@@ -94,7 +94,7 @@ namespace slabb::graphics
 
 		if (m_callback)
 		{
-			m_callback(cmd_list, current_frame_index);
+			m_callback(cmd_list, current_frame_index, scene_queue);
 		}
 	}
 
@@ -335,7 +335,7 @@ namespace slabb::graphics
 	}
 
 	void RenderGraph::render(wrapper::command::CommandList& cmd_list, UINT frame_index,
-							 CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle)
+							 CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle, const RenderQueue& scene_queue)
 	{
 		for (size_t pass_idx : m_execution_queue)
 		{
@@ -354,7 +354,7 @@ namespace slabb::graphics
 				// cmd_list.set_render_target(...);
 			}
 
-			pass->execute(cmd_list, frame_index);
+			pass->execute(cmd_list, frame_index, scene_queue);
 
 			if (pass->is_backbuffer_pass())
 			{

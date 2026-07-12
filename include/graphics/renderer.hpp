@@ -11,6 +11,7 @@ namespace slabb::graphics
 	class TextureResource;
 	class RenderGraph;
 	class RenderPipeline;
+	class Scene;
 	
 	struct FrameContext;
 	struct GraphicsModel; // Interface model
@@ -84,11 +85,10 @@ namespace slabb::graphics
 		*/
 		bool init_pipeline(const std::string& vertex_path, const std::string& pixel_path,
 							std::vector <core::VertexAttribute> vertex_attributes);
-		void load_model(const GraphicsModel& model);
-		void render_frame();
+		void render_frame(Scene& scene);
 
-		// TODO: Move this into managed scene class
-		void update_uniform_data(const FrameContext& frame);
+		[[nodiscard]] RenderGraph* render_graph() const noexcept { return m_render_graph.get(); }
+		[[nodiscard]] Device* device() const noexcept { return m_device.get(); }
 
 	private:
 		std::unique_ptr<RenderGraph> m_render_graph;

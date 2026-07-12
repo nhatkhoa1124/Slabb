@@ -4,6 +4,8 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
+#include "graphics/scene.hpp"
+
 namespace slabb::core
 {
 	Application::Application()
@@ -11,6 +13,7 @@ namespace slabb::core
 		m_config_system = std::make_unique<ConfigSystem>("assets/config/application_cfg.toml");
 		m_render_system = std::make_unique<RenderSystem>();
 		m_window = std::make_unique<Window>();
+		m_active_scene = std::make_unique <slabb::graphics::Scene>();
 	}
 
 	Application::~Application() 
@@ -48,7 +51,7 @@ namespace slabb::core
 
 		slabb::core::model::Model square_model;
 		square_model.meshes.push_back(square_mesh);
-		m_render_system->load_model(square_model);
+		m_render_system->load_model(square_model, *m_active_scene);
 
 		spdlog::info("Application subsystems initialized successfully");
 		return true;
@@ -59,7 +62,7 @@ namespace slabb::core
 		while (!m_window->should_close())
 		{
 			m_window->poll();
-			m_render_system->run();
+			m_render_system->run(*m_active_scene);
 		}
 	}
 }

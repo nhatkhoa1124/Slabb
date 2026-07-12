@@ -11,6 +11,7 @@
 #include "wrapper/instance.hpp"
 #include "wrapper/command/command_list.hpp"
 #include "wrapper/resource/resource_heap.hpp"
+#include "render_queue.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -151,8 +152,8 @@ namespace slabb::graphics
 		void writes_to(const RenderResource* resource);
 		void reads_from(const RenderResource* resource);
 		void clear_write_targets();
-		void record(std::function<void(wrapper::command::CommandList&, UINT)> callback);
-		void execute(wrapper::command::CommandList& cmd_list, UINT current_frame_index);
+		void record(std::function<void(wrapper::command::CommandList&, UINT, const RenderQueue&)> callback);
+		void execute(wrapper::command::CommandList& cmd_list, UINT current_frame_index, const RenderQueue& scene_queue);
 
 		void set_viewport(const D3D12_VIEWPORT& viewport) { m_viewport = viewport; }
 		void set_rect(const D3D12_RECT& rect) { m_rect = rect; }
@@ -189,7 +190,7 @@ namespace slabb::graphics
 		std::vector<const RenderResource*> m_reads;
 		std::vector<D3D12_RESOURCE_BARRIER> m_barriers;
 
-		std::function<void(wrapper::command::CommandList&, UINT)> m_callback;
+		std::function<void(wrapper::command::CommandList&, UINT, const RenderQueue&)> m_callback;
 		D3D12_VIEWPORT m_viewport{};
 		D3D12_RECT m_rect{};
 		ID3D12PipelineState* m_pso{ nullptr };
@@ -251,7 +252,7 @@ namespace slabb::graphics
 
 		void compile();
 		void render(wrapper::command::CommandList& cmd_list, UINT frame_index,
-					CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle);
+					CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle, const RenderQueue& scene_queue);
 		void clear();
 	private:
 
