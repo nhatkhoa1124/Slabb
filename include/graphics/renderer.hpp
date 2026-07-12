@@ -11,8 +11,9 @@ namespace slabb::graphics
 	class TextureResource;
 	class RenderGraph;
 	class RenderPipeline;
+	class TextureManager;
 	class Scene;
-	
+
 	struct FrameContext;
 	struct GraphicsModel; // Interface model
 	struct RenderModel;   // GPU model
@@ -49,6 +50,11 @@ namespace slabb::graphics::wrapper::synchronization
 	class Fence;
 }
 
+namespace slabb::graphics::wrapper::descriptor
+{
+	class DescriptorHeap;
+}
+
 using Microsoft::WRL::ComPtr;
 using slabb::graphics::wrapper::Device;
 using slabb::graphics::wrapper::Instance;
@@ -81,17 +87,29 @@ namespace slabb::graphics
 
 		/**
 		* @brief This method initialize pipeline structures in the renderer
-		* @param vertex_attributes The vertex attribute interface 
+		* @param vertex_attributes The vertex attribute interface
 		*/
 		bool init_pipeline(const std::string& vertex_path, const std::string& pixel_path,
 							std::vector <core::VertexAttribute> vertex_attributes);
-		void render_frame(Scene& scene);
 
+		/**
+		* @brief Build render passes against the supplied Scene. Called after model loading so
+		* textures are known and can be registered as SRV reads on the main pass.
+		*/
+		void setup_render_passes(Scene& scene);
+
+		void render_frame(Scene& scene);
 		[[nodiscard]] RenderGraph* render_graph() const noexcept { return m_render_graph.get(); }
 		[[nodiscard]] Device* device() const noexcept { return m_device.get(); }
+		[[nodiscard]] wrapper::descriptor::DescriptorHeap* descriptor_heap() const noexcept
+		{
+			return m_descriptor_heap.get();
+		}
+		[[nodiscard]] TextureManager* texture_manager() const noexcept { return m_texture_manager.get(); }
 
 	private:
 		std::unique_ptr<RenderGraph> m_render_graph;
+		std::unique_ptr<TextureManager> m_texture_manager;
 		std::vector<TextureResource*> m_graph_backbuffers;
 		std::vector<RenderModel> m_scene_models;
 		std::vector<FrameContext> m_frames;

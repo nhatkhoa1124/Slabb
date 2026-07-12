@@ -71,14 +71,52 @@ namespace slabb::graphics::wrapper::descriptor
         }
     }
 
-    void DescriptorHeap::create_depth_stencil_view(ID3D12Device* device)
+    void DescriptorHeap::create_depth_stencil_view(ID3D12Device* device, ID3D12Resource* depth_resource, UINT index)
     {
+        NULL_CHECK(device);
+        NULL_CHECK(depth_resource);
 
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc = {};
+        dsv_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        dsv_desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        dsv_desc.Flags = D3D12_DSV_FLAG_NONE;
+        dsv_desc.Texture2D.MipSlice = 0;
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE dsv_handle(get_dsv_heap_start());
+        dsv_handle.Offset(index, m_dsv_descriptor_size);
+
+        device->CreateDepthStencilView(depth_resource, &dsv_desc, dsv_handle);
+        spdlog::info("Depth Stencil View created successfully at heap index slot {}", index);
     }
 
-    void DescriptorHeap::create_resource_descriptors(ID3D12Device* device)
+    std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE>
+    DescriptorHeap::create_shader_resource_view(ID3D12Device* device, ID3D12Resource* texture_resource, UINT index)
     {
+        NULL_CHECK(device);
+        NULL_CHECK(texture_resource);
 
+        // Describe texture layout view specifications
+        D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
+        srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        // Match the R8G8B8A8 texture layout outputted by tinygltf images
+        srv_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srv_desc.Texture2D.MipLevels = 1;
+        srv_desc.Texture2D.MostDetailedMip = 0;
+        srv_desc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+        // Calculate the CPU descriptor location where the driver writes structural info
+        CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle(m_resource_heap->GetCPUDescriptorHandleForHeapStart());
+        cpu_handle.Offset(index, m_resource_descriptor_size);
+
+        // Calculate the corresponding GPU descriptor location that your shader pipeline uses to draw
+        CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle(get_resource_heap_start());
+        gpu_handle.Offset(index, m_resource_descriptor_size);
+
+        device->CreateShaderResourceView(texture_resource, &srv_desc, cpu_handle);
+
+        spdlog::info("Shader Resource View allocated successfully at descriptor slot {}", index);
+        return { cpu_handle, gpu_handle };
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::get_rtv_heap_start()

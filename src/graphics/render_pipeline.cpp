@@ -8,10 +8,23 @@ namespace slabb::graphics
 {
 	void RenderPipeline::setup_pipeline(RenderGraph& render_graph,
 										const std::vector<FrameContext>& frames,
+										const std::vector<TextureResource*>& frame_textures,
 										ID3D12RootSignature* root_signature,
 										ID3D12PipelineState* pso)
 	{
 		setup_main_pass(render_graph, frames, root_signature, pso);
+
+		// Add reads from every texture the scene uses. The render graph will then emit a
+		// transition from each texture's tracked initial state (COPY_DEST for fresh uploads)
+		// to PIXEL_SHADER_RESOURCE on the main pass.
+		RenderPass* main = render_graph.get_pass("Main");
+		if (main)
+		{
+			for (TextureResource* tex : frame_textures)
+			{
+				main->reads_from(tex);
+			}
+		}
 	}
 
 	void RenderPipeline::setup_main_pass(RenderGraph& render_graph,
@@ -39,8 +52,17 @@ namespace slabb::graphics
 				// Traverse opaque bucket
 				for (const auto& item : queue.opaque_buckets)
 				{
-					// TODO: Bind the unique per-object transform matrix to Slot 1 in the root signature
-					// e.g., cmd.set_graphics_root_cbv(1, item.constant_buffer_address);
+					// Bind per-draw SRV descriptor table at root parameter 1 (matches the layout
+					// declared in RootSignature::serialize_root_signature). A null handle means
+					// "no texture" — fall through and let the shader's static sampler do wrap
+					// with whatever it sees.
+					if (item.srv_gpu_handle.ptr != 0)
+					{
+						cmd.command_list()->SetGraphicsRootDescriptorTable(1, item.srv_gpu_handle);
+					}
+
+					// TODO: Bind the unique per-object transform matrix to Slot 2 in the root signature
+					// e.g., cmd.set_graphics_root_cbv(2, item.constant_buffer_address);
 
 					// Bind vertex buffer layout state
 					cmd.set_vertex_buffers(0, 1, &item.vertex_buffer->vertex_view());

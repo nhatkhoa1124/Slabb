@@ -26,6 +26,7 @@ namespace slabb::core::systems
 		void load_model(const core::model::Model& model, slabb::graphics::Scene& target_scene);
 
 		[[nodiscard]] inline Renderer* renderer() { return m_renderer.get(); }
+		[[nodiscard]] inline slabb::graphics::TextureManager* texture_manager() { return m_renderer->texture_manager(); }
 	private:
 		std::unique_ptr<Renderer> m_renderer;
 	};

@@ -43,6 +43,59 @@ namespace slabb::graphics
 		}
 	}
 
+	// Texture Resource
+	void TextureResource::initialize_hardware_rgba8(ID3D12Resource* native_resource,
+													D3D12MA::Allocation* allocation,
+													D3D12_RESOURCE_STATES initial_state)
+	{
+		assert(native_resource != nullptr);
+
+		m_resource = native_resource;
+		m_allocation = allocation;
+
+		set_state(initial_state);
+	}
+
+	void TextureResource::initialize_hardware_depth(ID3D12Device* device, UINT width, UINT height)
+	{
+		D3D12_RESOURCE_DESC desc = {};
+		desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		desc.Alignment = 0;
+		desc.Width = width;
+		desc.Height = height;
+		desc.DepthOrArraySize = 1;
+		desc.MipLevels = 1;
+		desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // Standard 24-bit depth, 8-bit stencil
+		desc.SampleDesc.Count = 1;
+		desc.SampleDesc.Quality = 0;
+		desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+		// 🛑 CRITICAL: Tell the driver this resource will be bound to the Depth-Stencil hardware stage
+		desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+		// 2. Configure the optimal clear value optimization hint
+		D3D12_CLEAR_VALUE clear_value = {};
+		clear_value.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		clear_value.DepthStencil.Depth = 1.0f; // Clear to furthest distance
+		clear_value.DepthStencil.Stencil = 0;
+
+		// 3. Allocate it directly on a Default GPU Heap
+		CD3DX12_HEAP_PROPERTIES heap_props(D3D12_HEAP_TYPE_DEFAULT);
+
+		HRESULT hr = device->CreateCommittedResource(
+			&heap_props,
+			D3D12_HEAP_FLAG_NONE,
+			&desc,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE, // Start in Depth Write state
+			&clear_value,
+			IID_PPV_ARGS(&m_resource)
+		);
+
+		if (FAILED(hr)) throw std::runtime_error("Failed to allocate hardware Depth Buffer target.");
+
+		set_state(D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	}
+
 	//Render Pass
 	void RenderPass::writes_to(const RenderResource* resource)
 	{
@@ -144,6 +197,10 @@ namespace slabb::graphics
 	{
 		spdlog::debug("Start building resource barriers...");
 
+		// Upload-heap buffers always live in GENERIC_READ. Other resources report their own
+		// initial state through the RenderResource constructor; we honor it instead of forcing
+		// COMMON, which would conflict with state transitions already in flight on this frame
+		// (e.g. textures that flush_uploads() just transitioned from COPY_DEST).
 		for (auto& resource : m_resources)
 		{
 			if (auto* buffer = dynamic_cast<BufferResource*>(resource.get()))
@@ -151,10 +208,8 @@ namespace slabb::graphics
 				if (buffer->hardware_heap_type() == D3D12_HEAP_TYPE_UPLOAD)
 				{
 					resource->set_state(D3D12_RESOURCE_STATE_GENERIC_READ);
-					continue;
 				}
 			}
-			resource->set_state(D3D12_RESOURCE_STATE_COMMON);
 		}
 
 		for (size_t pass_idx : m_execution_queue)
@@ -330,7 +385,6 @@ namespace slabb::graphics
 		
 		m_execution_queue = std::move(holder);
 		std::reverse(m_execution_queue.begin(), m_execution_queue.end());
-		build_resource_barriers();
 		spdlog::debug("Render graph compiled successfully");
 	}
 

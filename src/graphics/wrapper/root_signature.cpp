@@ -30,28 +30,40 @@ namespace slabb::graphics::wrapper
 
 	bool RootSignature::serialize_root_signature()
 	{
-		CD3DX12_ROOT_PARAMETER root_params[1] = {};
-		root_params[0].InitAsConstantBufferView(0, 0);
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[1] = {};
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+
+		CD3DX12_ROOT_PARAMETER1 root_params[2] = {};
+		root_params[0].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_VERTEX);
+		root_params[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+
 		D3D12_ROOT_SIGNATURE_FLAGS root_sig_flags =
 			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
-		CD3DX12_ROOT_SIGNATURE_DESC desc;
-		desc.Init(
+		CD3DX12_STATIC_SAMPLER_DESC linear_sampler(
+			0,                                // Shader Register slot: s0
+			D3D12_FILTER_MIN_MAG_MIP_LINEAR,  // Filter behavior: Linear Blending interpolation
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // Address U: Wrap/Tile textures outside 0-1 range
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // Address V
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP   // Address W
+		);
+		linear_sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
+		desc.Init_1_1(
 			_countof(root_params),
 			root_params,
-			0,
-			nullptr,
+			1,
+			&linear_sampler,
 			root_sig_flags
 		);
 
 		ComPtr<ID3DBlob> error_blob;
 		spdlog::debug("Serializing root signature...");
-		const auto result = D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, 
-														&m_signature_blob, &error_blob);
+		const auto result = D3D12SerializeVersionedRootSignature(&desc, &m_signature_blob, &error_blob);
 		if (FAILED(result))
 		{
 			if (error_blob != nullptr)

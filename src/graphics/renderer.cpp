@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 
 #include "graphics/render_graph.hpp"
+#include "graphics/texture_manager.hpp"
 #include "graphics/wrapper/instance.hpp"
 #include "graphics/wrapper/device.hpp"
 #include "graphics/wrapper/swapchain.hpp"
@@ -62,7 +63,7 @@ namespace slabb::graphics
 		// Factory and adapter creation
 		m_instance->create_factory();
 		m_instance->enumerate_adapter();
-		// Device creation
+		// Device creation (also brings up D3D12MA allocator)
 		m_device->create_device(m_instance->adapter());
 		// Command queue creation
 		m_cmd_queue->create_command_queue(m_device->device());
@@ -75,6 +76,9 @@ namespace slabb::graphics
 		m_descriptor_heap->create_heap(DescriptorHeapType::RESOURCE, m_device->device(), 1024);
 		// Render target view declaration
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_descriptor_heap->get_rtv_heap_start());
+		// Texture manager takes over allocation + per-frame upload ring.
+		m_texture_manager = std::make_unique<TextureManager>(*m_device, *m_render_graph,
+															 m_swapchain->buffer_count());
 		// Backbuffer creation
 		m_frames.resize(m_swapchain->buffer_count());
 		m_graph_backbuffers.resize(m_swapchain->buffer_count());
@@ -88,15 +92,13 @@ namespace slabb::graphics
 			frame.fence = std::make_unique<Fence>();
 			frame.fence->create_fence(m_device->device());
 
-			// Setup backbuffers
+			// Setup backbuffers: import the swapchain's native resource through the manager.
 			ID3D12Resource* backbuffer = m_swapchain->render_target(i);
 			m_device->device()->CreateRenderTargetView(backbuffer, nullptr, rtv_handle);
 			rtv_handle.Offset(1, m_descriptor_heap->rtv_heap_size());
 
-			frame.backbuffer_target = m_render_graph->create_resource<TextureResource>(
-				"BackBuffer_" + std::to_string(i),
-				TextureUsage::BACK_BUFFER);
-			frame.backbuffer_target->set_native_resource(backbuffer);
+			frame.backbuffer_target = m_texture_manager->import_external(
+				"BackBuffer_" + std::to_string(i), backbuffer, TextureUsage::BACK_BUFFER);
 			m_graph_backbuffers[i] = frame.backbuffer_target;
 
 			// Setup constant buffers
@@ -107,12 +109,12 @@ namespace slabb::graphics
 			frame.camera_constant_buffer->stage_data(&transform_data, sizeof(TransformCB));
 			frame.camera_constant_buffer->initialize_hardware(m_device->device(), 0);
 
-			// Setup depth buffers
+			// Setup depth buffers through the manager.
 			std::string depth_name = "DepthBuffer_" + std::to_string(i);
-			frame.depth_target = m_render_graph->create_resource<TextureResource>(
-				depth_name,
-				TextureUsage::DEPTH_STENCIL_BUFFER
-			);
+			frame.depth_target = m_texture_manager->create_depth(
+				depth_name, m_swapchain->width(), m_swapchain->height());
+			m_descriptor_heap->create_depth_stencil_view(m_device->device(),
+				frame.depth_target->underlying_resource(), i);
 		}
 		return true;
 	}
@@ -135,13 +137,16 @@ namespace slabb::graphics
 		m_cmd_list->create_command_list(m_device->device(), m_cmd_queue->command_list_type(),
 										m_frames[0].command_allocator->allocator(), nullptr);
 		m_cmd_list->close();
-		// Setup & compile render graph
-		m_render_pipeline->setup_pipeline(*m_render_graph, m_frames,
+
+		return true;
+	}
+
+	void Renderer::setup_render_passes(Scene& scene)
+	{
+		m_render_pipeline->setup_pipeline(*m_render_graph, m_frames, scene.textures(),
 										  m_global_root_signature->root_signature(),
 										  m_graphics_pipeline->pipeline_state_object());
 		m_render_graph->compile();
-
-		return true;
 	}
 
 	void Renderer::render_frame(Scene& scene)
@@ -149,6 +154,8 @@ namespace slabb::graphics
 		UINT current_frame = m_swapchain->current_backbuffer();
 		const auto& frame = m_frames[current_frame];
 		frame.fence->flush(m_cmd_queue->command_queue());
+
+		m_texture_manager->set_current_frame(current_frame);
 
 		scene.update_transforms(frame);
 		scene.collect_render_items();
@@ -174,6 +181,13 @@ namespace slabb::graphics
 		// Record & render commands
 		frame.command_allocator->reset();
 		m_cmd_list->reset(frame.command_allocator->allocator(), nullptr);
+
+		// Any pending texture uploads scheduled earlier in this frame go on the same command list,
+		// ahead of any render pass, so their copy + barrier commands execute before the SRV is bound.
+		m_texture_manager->flush_uploads(*m_cmd_list);
+
+		ID3D12DescriptorHeap* heaps[] = { m_descriptor_heap->resource_heap() };
+		m_cmd_list->command_list()->SetDescriptorHeaps(_countof(heaps), heaps);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE active_rtv(
 			m_descriptor_heap->get_rtv_heap_start(),
 			current_frame,

@@ -1,6 +1,7 @@
 #pragma once
 #include "common/common_graphics.hpp"
 #include <directx/d3d12.h>
+#include <utility>
 
 namespace slabb::graphics::wrapper
 {
@@ -39,8 +40,10 @@ namespace slabb::graphics::wrapper::descriptor
 		*/
 		void create_render_target_view(ID3D12Device* device, const Swapchain& swapchain);
 
-		void create_depth_stencil_view(ID3D12Device* device);
-		void create_resource_descriptors(ID3D12Device* device);
+		void create_depth_stencil_view(ID3D12Device* device, ID3D12Resource* depth_resource, UINT index);
+		[[nodiscard]] std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE>
+		create_shader_resource_view(ID3D12Device* device, ID3D12Resource* texture_resource, UINT index);
+
 		D3D12_CPU_DESCRIPTOR_HANDLE get_rtv_heap_start();
 		D3D12_CPU_DESCRIPTOR_HANDLE get_dsv_heap_start();
 		D3D12_GPU_DESCRIPTOR_HANDLE get_resource_heap_start();

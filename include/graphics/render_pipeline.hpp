@@ -14,20 +14,21 @@ namespace slabb::graphics
 	public:
 		RenderPipeline() = default;
 
-		/**
-		* @brief Setup pipeline topology for the whole app
-		*/
-		void setup_pipeline(RenderGraph& render_graph,
-							const std::vector<FrameContext>& frames,
-							ID3D12RootSignature* root_signature,
-							ID3D12PipelineState* pso);
+	/**
+	* @brief Setup pipeline topology for the whole app
+	*/
+	void setup_pipeline(RenderGraph& render_graph,
+						const std::vector<FrameContext>& frames,
+						const std::vector<TextureResource*>& frame_textures,
+						ID3D12RootSignature* root_signature,
+						ID3D12PipelineState* pso);
 
-	private:
-		void setup_main_pass(RenderGraph& render_graph,
-							const std::vector<FrameContext>& frames,
-							ID3D12RootSignature* root_signature,
-							ID3D12PipelineState* pso);
-		// TODO: Add more pass in the future
+private:
+	void setup_main_pass(RenderGraph& render_graph,
+						const std::vector<FrameContext>& frames,
+						ID3D12RootSignature* root_signature,
+						ID3D12PipelineState* pso);
+	// TODO: Add more pass in the future
 
 	};
 }

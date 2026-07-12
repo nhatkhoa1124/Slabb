@@ -7,6 +7,17 @@
 namespace slabb::graphics
 {
 	/**
+	* @brief Tightly-packed RGBA8 image data shared from core to graphics.
+	* Mirrors core::model::Image; duplicated here to avoid a graphics->core dependency.
+	*/
+	struct TextureImage
+	{
+		int width{ 0 };
+		int height{ 0 };
+		std::vector<uint8_t> pixels;
+	};
+
+	/**
 	* @brief Interface for core-graphics Mesh
 	*/
 	struct GraphicsMesh
@@ -17,6 +28,8 @@ namespace slabb::graphics
 
 		const uint32_t* index_data;
 		size_t index_count;
+
+		int base_color_texture{ -1 }; // index into GraphicsModel::images
 	};
 
 	/**
@@ -25,6 +38,7 @@ namespace slabb::graphics
 	struct GraphicsModel
 	{
 		std::vector<GraphicsMesh> meshes;
+		std::vector<TextureImage> images;
 		DirectX::XMMATRIX transform;
 	};
 

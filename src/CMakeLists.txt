@@ -25,7 +25,8 @@ set(SLABB_SOURCE_FILES
 	graphics/scene.cpp 
 	graphics/render_pipeline.cpp
 	graphics/context.cpp 
-	graphics/render_queue.cpp)
+	graphics/render_queue.cpp
+	graphics/texture_manager.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "common/common_graphics.hpp"
 #include <dxgi1_6.h>
+#include <D3D12MemAlloc.h>
 #include <memory>
 
 using Microsoft::WRL::ComPtr;
@@ -18,7 +19,9 @@ namespace slabb::graphics::wrapper
 		void create_device(IDXGIAdapter* adapter);
 
 		[[nodiscard]] ID3D12Device* device() const { return m_device.Get(); }
+		[[nodiscard]] D3D12MA::Allocator* allocator() const { return m_allocator.Get(); }
 	private:
 		ComPtr<ID3D12Device> m_device;
+		ComPtr<D3D12MA::Allocator> m_allocator;
 	};
 }

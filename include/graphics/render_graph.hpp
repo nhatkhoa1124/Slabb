@@ -7,6 +7,7 @@
 #include <functional>
 #include <memory>
 #include <DirectXMath.h>
+#include <D3D12MemAlloc.h>
 
 #include "wrapper/instance.hpp"
 #include "wrapper/command/command_list.hpp"
@@ -45,6 +46,9 @@ namespace slabb::graphics
 		INDEX,
 		CONSTANT
 	};
+
+	class BufferResource;
+	class TextureResource;
 
 	/**
 	* @brief Buffer class handles CPU side buffer works
@@ -104,6 +108,8 @@ namespace slabb::graphics
 		// Graph resource tracking handles
 		BufferResource* vertex_buffer{ nullptr };
 		BufferResource* index_buffer{ nullptr };
+		TextureResource* texture{ nullptr }; // nullptr means untextured — bind a default white SRV
+		UINT srv_slot{ 0 };
 
 		uint32_t vertex_count{ 0 };
 		uint32_t index_count{ 0 };
@@ -134,12 +140,16 @@ namespace slabb::graphics
 		explicit TextureResource(std::string name, TextureUsage usage = TextureUsage::COMMON)
 			: RenderResource{ std::move(name) }, m_usage{ usage } {};
 		void set_native_resource(ID3D12Resource* resource) override { m_resource = resource; }
+		void initialize_hardware_rgba8(ID3D12Resource* native_resource, D3D12MA::Allocation* allocation,
+									   D3D12_RESOURCE_STATES initial_state);
+		void initialize_hardware_depth(ID3D12Device* device, UINT width, UINT height);
 
 		[[nodiscard]] TextureUsage usage() const { return m_usage; }
 		[[nodiscard]] ID3D12Resource* underlying_resource() const override { return m_resource.Get(); }
 	private:
 		TextureUsage m_usage;
 		ComPtr<ID3D12Resource> m_resource{nullptr};
+		ComPtr<D3D12MA::Allocation> m_allocation{nullptr};
 	};
 
 	/**
