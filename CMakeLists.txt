@@ -19,6 +19,7 @@ FetchContent_MakeAvailable(
 	tomlplusplus
 	gtest
 	directx_headers
+	tinygltf
 )
 
 add_subdirectory(src)

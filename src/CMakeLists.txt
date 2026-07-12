@@ -21,7 +21,11 @@ set(SLABB_SOURCE_FILES
 	core/model/model.cpp
 	graphics/wrapper/resource/resource_heap.cpp 
 	graphics/wrapper/synchronization/fence.cpp 
-	graphics/graphics_interface/graphics_shader.cpp "graphics/scene.cpp" "graphics/render_pipeline.cpp" "graphics/context.cpp" "graphics/render_queue.cpp")
+	graphics/graphics_interface/graphics_shader.cpp 
+	graphics/scene.cpp 
+	graphics/render_pipeline.cpp
+	graphics/context.cpp 
+	graphics/render_queue.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SLABB_SOURCE_FILES})
 
@@ -45,4 +49,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	spdlog::spdlog
 	tomlplusplus::tomlplusplus
 	Microsoft::DirectX-Headers
+	tinygltf
 )

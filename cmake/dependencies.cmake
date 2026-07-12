@@ -42,3 +42,10 @@ FetchContent_Declare(directx_headers
 	GIT_SHALLOW ON 
 	GIT_PROGRESS ON 
 )
+
+FetchContent_Declare(tinygltf
+	GIT_REPOSITORY https://github.com/syoyo/tinygltf
+	GIT_TAG v3.0.0 
+	GIT_SHALLOW ON
+	GIT_PROGRESS ON
+)
